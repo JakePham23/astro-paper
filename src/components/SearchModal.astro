@@ -1,0 +1,641 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import IconSearch from "@/assets/icons/IconSearch.svg";
+import IconX from "@/assets/icons/IconX.svg";
+import { getAssetPath } from "@/utils/withBase";
+import config from "@/config";
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const indexUrl = getAssetPath("search-index.json");
+const searchUrl = getRelativeLocaleUrl(locale, "search");
+const topicsUrl = getRelativeLocaleUrl(locale, "topics");
+const tagsUrl = getRelativeLocaleUrl(locale, "tags");
+---
+
+<dialog
+  id="quick-search-modal"
+  class="quick-search-dialog"
+  aria-label="Tìm kiếm nhanh"
+  data-index-url={indexUrl}
+  data-search-url={searchUrl}
+  data-topics-url={topicsUrl}
+  data-tags-url={tagsUrl}
+  data-pagefind-ignore
+>
+  <div class="quick-search-panel">
+    <div class="quick-search-header">
+      <IconSearch class="text-muted-foreground size-5 shrink-0" />
+      <input
+        id="quick-search-input"
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Tìm bài viết, chủ đề, tag... (hỗ trợ không dấu)"
+        class="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base focus:outline-none"
+      />
+      <button
+        type="button"
+        data-close-search
+        aria-label="Đóng tìm kiếm"
+        class="border-border bg-muted/50 text-muted-foreground hover:border-accent/60 hover:text-accent inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 font-mono text-xs transition-colors"
+      >
+        <span class="hidden sm:inline">ESC</span>
+        <IconX class="size-4 sm:hidden" />
+      </button>
+    </div>
+
+    <div
+      id="quick-search-results"
+      role="listbox"
+      aria-label="Kết quả tìm kiếm"
+      class="max-h-[60dvh] overflow-y-auto overscroll-contain p-2 sm:p-3"
+    >
+    </div>
+
+    <div class="quick-search-footer">
+      <span class="text-muted-foreground hidden text-xs sm:inline">
+        <kbd class="quick-kbd">↑</kbd>
+        <kbd class="quick-kbd">↓</kbd> chọn ·
+        <kbd class="quick-kbd">↵</kbd> mở ·
+        <kbd class="quick-kbd">Esc</kbd> đóng
+      </span>
+      <a
+        id="quick-search-pagefind-link"
+        href={searchUrl}
+        class="text-accent ms-auto text-xs font-medium hover:underline"
+      >
+        Tìm toàn văn (Pagefind) →
+      </a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  type SearchItem = {
+    title: string;
+    description: string;
+    url: string;
+    folder: string;
+    folderLabel: string;
+    tags: string[];
+    headings: string[];
+    featured: boolean;
+  };
+
+  type IndexedItem = SearchItem & {
+    nTitle: string;
+    nDesc: string;
+    nFolder: string;
+    nTags: string;
+    nHeadings: string[];
+    nCombined: string;
+  };
+
+  let cachedItems: IndexedItem[] | null = null;
+  let fetchPromise: Promise<IndexedItem[]> | null = null;
+
+  function normalizeVi(str: string): string {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[đĐ]/g, "d")
+      .toLowerCase()
+      .trim();
+  }
+
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  async function loadSearchIndex(indexUrl: string): Promise<IndexedItem[]> {
+    if (cachedItems) return cachedItems;
+    if (!fetchPromise) {
+      fetchPromise = fetch(indexUrl)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json() as Promise<SearchItem[]>;
+        })
+        .then(items => {
+          cachedItems = items.map(item => {
+            const nTitle = normalizeVi(item.title);
+            const nDesc = normalizeVi(item.description);
+            const nFolder = normalizeVi(item.folderLabel);
+            const nTags = normalizeVi(item.tags.join(" "));
+            const nHeadings = item.headings.map(normalizeVi);
+            return {
+              ...item,
+              nTitle,
+              nDesc,
+              nFolder,
+              nTags,
+              nHeadings,
+              nCombined: `${nTitle} ${nFolder} ${nTags} ${nHeadings.join(" ")} ${nDesc}`,
+            };
+          });
+          return cachedItems;
+        })
+        .catch(err => {
+          fetchPromise = null;
+          throw err;
+        });
+    }
+    return fetchPromise;
+  }
+
+  function searchItems(
+    items: IndexedItem[],
+    rawQuery: string
+  ): Array<{ item: IndexedItem; matchedHeading?: string }> {
+    const nq = normalizeVi(rawQuery);
+    if (!nq) return [];
+    const tokens = nq.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return [];
+
+    const scored: Array<{
+      item: IndexedItem;
+      score: number;
+      matchedHeading?: string;
+    }> = [];
+
+    for (const item of items) {
+      if (!tokens.every(tok => item.nCombined.includes(tok))) continue;
+
+      let score = 0;
+      if (item.nTitle.startsWith(nq)) score += 120;
+      else if (item.nTitle.includes(nq)) score += 80;
+
+      let matchedHeading: string | undefined;
+      for (const tok of tokens) {
+        if (item.nTitle.includes(tok)) score += 25;
+        if (item.nTags.includes(tok)) score += 20;
+        if (item.nFolder.includes(tok)) score += 15;
+        const hIdx = item.nHeadings.findIndex(h => h.includes(tok));
+        if (hIdx !== -1) {
+          score += 12;
+          matchedHeading ??= item.headings[hIdx];
+        }
+        if (item.nDesc.includes(tok)) score += 8;
+      }
+
+      if (item.featured) score += 2;
+      scored.push({ item, score, matchedHeading });
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 12).map(({ item, matchedHeading }) => ({
+      item,
+      matchedHeading,
+    }));
+  }
+
+  function getModalElements() {
+    const dialog = document.getElementById(
+      "quick-search-modal"
+    ) as HTMLDialogElement | null;
+    const input = document.getElementById(
+      "quick-search-input"
+    ) as HTMLInputElement | null;
+    const results = document.getElementById("quick-search-results");
+    const pagefindLink = document.getElementById(
+      "quick-search-pagefind-link"
+    ) as HTMLAnchorElement | null;
+    return { dialog, input, results, pagefindLink };
+  }
+
+  let activeIndex = -1;
+
+  function setActiveResult(index: number) {
+    const { results } = getModalElements();
+    if (!results) return;
+    const links = Array.from(
+      results.querySelectorAll<HTMLAnchorElement>("[data-search-result]")
+    );
+    if (links.length === 0) {
+      activeIndex = -1;
+      return;
+    }
+    const clamped = ((index % links.length) + links.length) % links.length;
+    activeIndex = clamped;
+    links.forEach((link, idx) => {
+      const isCurrent = idx === clamped;
+      link.setAttribute("data-active", String(isCurrent));
+      link.setAttribute("aria-selected", String(isCurrent));
+      if (isCurrent) {
+        link.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }
+
+  function renderEmptyState(
+    items: IndexedItem[],
+    topicsUrl: string,
+    tagsUrl: string,
+    searchUrl: string
+  ): string {
+    const featured = items.filter(i => i.featured).slice(0, 6);
+    const quickLinks = `
+      <div class="mb-3">
+        <div class="text-muted-foreground mb-1.5 px-2 font-mono text-[11px] font-semibold uppercase tracking-wider">
+          Điều hướng nhanh
+        </div>
+        <div class="grid gap-1.5 sm:grid-cols-3">
+          <a href="${escapeHtml(topicsUrl)}" data-search-result class="quick-result-chip">
+            <span>Knowledge Map</span>
+            <span class="text-muted-foreground font-mono text-[11px]">/topics</span>
+          </a>
+          <a href="${escapeHtml(tagsUrl)}" data-search-result class="quick-result-chip">
+            <span>Tất cả Tags</span>
+            <span class="text-muted-foreground font-mono text-[11px]">/tags</span>
+          </a>
+          <a href="${escapeHtml(searchUrl)}" data-search-result class="quick-result-chip">
+            <span>Tìm toàn văn</span>
+            <span class="text-muted-foreground font-mono text-[11px]">Pagefind</span>
+          </a>
+        </div>
+      </div>
+    `;
+
+    const featuredHtml =
+      featured.length > 0
+        ? `
+      <div>
+        <div class="text-muted-foreground mb-1.5 px-2 font-mono text-[11px] font-semibold uppercase tracking-wider">
+          Bài viết nổi bật
+        </div>
+        <ul class="space-y-1">
+          ${featured
+            .map(
+              item => `
+            <li>
+              <a href="${escapeHtml(item.url)}" data-search-result class="quick-result-row">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="quick-result-title">${escapeHtml(item.title)}</span>
+                  <span class="quick-result-folder">${escapeHtml(item.folderLabel)}</span>
+                </div>
+                <p class="quick-result-desc">${escapeHtml(item.description)}</p>
+              </a>
+            </li>
+          `
+            )
+            .join("")}
+        </ul>
+      </div>
+    `
+        : "";
+
+    return quickLinks + featuredHtml;
+  }
+
+  function renderResults(
+    items: IndexedItem[],
+    rawQuery: string,
+    searchUrl: string,
+    topicsUrl: string,
+    tagsUrl: string
+  ) {
+    const { results, pagefindLink } = getModalElements();
+    if (!results) return;
+
+    const trimmed = rawQuery.trim();
+    if (pagefindLink) {
+      pagefindLink.href = trimmed
+        ? `${searchUrl}?q=${encodeURIComponent(trimmed)}`
+        : searchUrl;
+    }
+
+    if (!trimmed) {
+      results.innerHTML = renderEmptyState(items, topicsUrl, tagsUrl, searchUrl);
+      setActiveResult(0);
+      return;
+    }
+
+    const matches = searchItems(items, trimmed);
+    if (matches.length === 0) {
+      results.innerHTML = `
+        <div class="px-4 py-8 text-center">
+          <p class="text-foreground text-sm font-medium">Không tìm thấy tiêu đề hoặc tag khớp với "${escapeHtml(trimmed)}"</p>
+          <p class="text-muted-foreground mt-1 text-xs">Thử tìm trong toàn bộ nội dung bài viết bằng Pagefind:</p>
+          <a
+            href="${escapeHtml(`${searchUrl}?q=${encodeURIComponent(trimmed)}`)}"
+            data-search-result
+            class="border-accent/50 bg-accent/10 text-accent mt-3 inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-semibold hover:bg-accent/15"
+          >
+            Tìm "${escapeHtml(trimmed)}" với Pagefind →
+          </a>
+        </div>
+      `;
+      setActiveResult(0);
+      return;
+    }
+
+    results.innerHTML = `
+      <ul class="space-y-1">
+        ${matches
+          .map(({ item, matchedHeading }) => {
+            const snippet = matchedHeading
+              ? `Mục: ${matchedHeading}`
+              : item.description;
+            const tagsHtml = item.tags
+              .slice(0, 2)
+              .map(
+                t =>
+                  `<span class="bg-muted/70 text-muted-foreground rounded px-1.5 py-0.2 font-mono text-[10px]">#${escapeHtml(t)}</span>`
+              )
+              .join("");
+
+            return `
+              <li>
+                <a href="${escapeHtml(item.url)}" data-search-result class="quick-result-row">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="quick-result-title">${escapeHtml(item.title)}</span>
+                    <span class="quick-result-folder">${escapeHtml(item.folderLabel)}</span>
+                  </div>
+                  <p class="quick-result-desc">${escapeHtml(snippet)}</p>
+                  ${tagsHtml ? `<div class="mt-1 flex flex-wrap gap-1">${tagsHtml}</div>` : ""}
+                </a>
+              </li>
+            `;
+          })
+          .join("")}
+      </ul>
+    `;
+    setActiveResult(0);
+  }
+
+  async function openQuickSearch() {
+    const { dialog, input, results } = getModalElements();
+    if (!dialog) return;
+
+    // Close mobile nav drawer if currently open
+    const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
+    if (menuBtn?.getAttribute("aria-expanded") === "true") {
+      menuBtn.click();
+    }
+
+    if (!dialog.open) {
+      dialog.showModal();
+    }
+    requestAnimationFrame(() => input?.focus());
+
+    const indexUrl = dialog.dataset.indexUrl ?? "/search-index.json";
+    const searchUrl = dialog.dataset.searchUrl ?? "/search";
+    const topicsUrl = dialog.dataset.topicsUrl ?? "/topics";
+    const tagsUrl = dialog.dataset.tagsUrl ?? "/tags";
+
+    if (results && !cachedItems) {
+      results.innerHTML =
+        '<div class="text-muted-foreground px-4 py-8 text-center text-sm">Đang tải dữ liệu tìm kiếm...</div>';
+    }
+
+    try {
+      const items = await loadSearchIndex(indexUrl);
+      if (dialog.open) {
+        renderResults(
+          items,
+          input?.value ?? "",
+          searchUrl,
+          topicsUrl,
+          tagsUrl
+        );
+      }
+    } catch {
+      if (results) {
+        results.innerHTML = `
+          <div class="px-4 py-6 text-center text-sm text-muted-foreground">
+            Không tải được chỉ mục nhanh.
+            <a href="${escapeHtml(searchUrl)}" class="text-accent underline">Mở trang Search →</a>
+          </div>
+        `;
+      }
+    }
+  }
+
+  function closeQuickSearch() {
+    const { dialog } = getModalElements();
+    if (dialog?.open) {
+      dialog.close();
+    }
+  }
+
+  function bindModalEvents() {
+    const { dialog, input, results } = getModalElements();
+    if (!dialog) return;
+
+    document
+      .querySelectorAll<HTMLElement>("[data-open-search]")
+      .forEach(btn => {
+        if (btn.dataset.searchBound === "true") return;
+        btn.dataset.searchBound = "true";
+        btn.addEventListener("click", () => {
+          void openQuickSearch();
+        });
+      });
+
+    if (dialog.dataset.dialogBound === "true") return;
+    dialog.dataset.dialogBound = "true";
+
+    dialog.addEventListener("click", e => {
+      if (e.target === dialog) {
+        closeQuickSearch();
+      }
+    });
+
+    dialog
+      .querySelectorAll<HTMLElement>("[data-close-search]")
+      .forEach(btn => btn.addEventListener("click", closeQuickSearch));
+
+    input?.addEventListener("input", async () => {
+      const indexUrl = dialog.dataset.indexUrl ?? "/search-index.json";
+      const searchUrl = dialog.dataset.searchUrl ?? "/search";
+      const topicsUrl = dialog.dataset.topicsUrl ?? "/topics";
+      const tagsUrl = dialog.dataset.tagsUrl ?? "/tags";
+      try {
+        const items = await loadSearchIndex(indexUrl);
+        renderResults(items, input.value, searchUrl, topicsUrl, tagsUrl);
+      } catch {
+        // Ignore; handled on open
+      }
+    });
+
+    input?.addEventListener("keydown", e => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveResult(activeIndex + 1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveResult(activeIndex - 1);
+      } else if (e.key === "Enter") {
+        const active = results?.querySelector<HTMLAnchorElement>(
+          '[data-search-result][data-active="true"]'
+        );
+        if (active) {
+          e.preventDefault();
+          closeQuickSearch();
+          active.click();
+        }
+      }
+    });
+
+    results?.addEventListener("click", e => {
+      if ((e.target as Element).closest("a")) {
+        closeQuickSearch();
+      }
+    });
+  }
+
+  const win = window as unknown as { __quickSearchBound?: boolean };
+  if (!win.__quickSearchBound) {
+    win.__quickSearchBound = true;
+
+    document.addEventListener("keydown", e => {
+      const isCmdK =
+        (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
+      const active = document.activeElement as HTMLElement | null;
+      const isTyping =
+        active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.tagName === "SELECT" ||
+          active.isContentEditable);
+      const isSlash =
+        e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping;
+
+      if (isCmdK) {
+        e.preventDefault();
+        const { dialog } = getModalElements();
+        if (dialog?.open) closeQuickSearch();
+        else void openQuickSearch();
+      } else if (isSlash) {
+        e.preventDefault();
+        void openQuickSearch();
+      }
+    });
+
+    document.addEventListener("astro:before-swap", closeQuickSearch);
+    document.addEventListener("astro:page-load", bindModalEvents);
+  }
+
+  bindModalEvents();
+</script>
+
+<style is:global>
+  .quick-search-dialog {
+    margin: clamp(1rem, 8vh, 5rem) auto auto;
+    width: min(40rem, calc(100vw - 1.5rem));
+    max-width: none;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    box-shadow: 0 24px 48px -12px rgb(0 0 0 / 0.35);
+    overflow: hidden;
+  }
+
+  .quick-search-dialog::backdrop {
+    background: rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(4px);
+  }
+
+  .quick-search-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .quick-search-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .quick-search-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    border-top: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-muted) 25%, transparent);
+  }
+
+  .quick-kbd {
+    display: inline-block;
+    border: 1px solid var(--color-border);
+    background: var(--color-background);
+    border-radius: 0.25rem;
+    padding: 0.05rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .quick-result-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .quick-result-chip:hover,
+  .quick-result-chip[data-active="true"] {
+    border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+  }
+
+  .quick-result-row {
+    display: block;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.625rem;
+    transition: background-color 0.12s ease;
+  }
+
+  .quick-result-row:hover,
+  .quick-result-row[data-active="true"] {
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+
+  .quick-result-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+  }
+
+  .quick-result-row[data-active="true"] .quick-result-title,
+  .quick-result-row:hover .quick-result-title {
+    color: var(--color-accent);
+  }
+
+  .quick-result-folder {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .quick-result-desc {
+    margin-top: 0.2rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--color-muted-foreground);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

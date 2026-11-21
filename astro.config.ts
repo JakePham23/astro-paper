@@ -68,6 +68,15 @@ export default defineConfig({
   },
   fonts: [
     {
+      name: "Plus Jakarta Sans",
+      cssVariable: "--font-plus-jakarta-sans",
+      provider: fontProviders.google(),
+      fallbacks: ["sans-serif"],
+      weights: [400, 500, 600, 700],
+      styles: ["normal", "italic"],
+      formats: ["woff2", "woff"],
+    },
+    {
       name: "Google Sans Code",
       cssVariable: "--font-google-sans-code",
       provider: fontProviders.google(),

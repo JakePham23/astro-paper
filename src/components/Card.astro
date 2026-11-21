@@ -1,7 +1,10 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
 import { getPostUrl } from "@/utils/getPostPaths";
+import { slugifyStr } from "@/utils/slugify";
 import { toTransitionName } from "@/utils/toTransitionName";
+import config from "@/config";
 import Datetime from "./Datetime.astro";
 
 type Props = {
@@ -10,22 +13,54 @@ type Props = {
 
 const { variant: Heading = "h2", id, data, filePath } = Astro.props;
 
-const { title, description, ...props } = data;
+const { title, description, tags = [], ...props } = data;
+const locale = Astro.currentLocale ?? config.site.lang;
 ---
 
-<li class="my-6">
+<li
+  class:list={[
+    "group relative rounded-xl border p-4 transition-all duration-200 sm:p-5",
+    "border-border bg-background",
+    "hover:border-accent/50 hover:bg-muted/25",
+    "active:border-accent/60 active:bg-muted/35",
+  ]}
+>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <Datetime {...props} class="font-mono text-xs" />
+    {
+      tags.length > 0 && (
+        <div class="relative z-10 flex flex-wrap gap-1.5">
+          {tags.slice(0, 3).map(tag => (
+            <a
+              href={getRelativeLocaleUrl(locale, `tags/${slugifyStr(tag)}/`)}
+              class:list={[
+                "rounded-md px-2 py-0.5 font-mono text-[11px] transition-colors sm:text-xs",
+                "bg-muted/60 text-muted-foreground",
+                "hover:bg-accent/15 hover:text-accent",
+              ]}
+            >
+              #{tag}
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
   <a
     href={getPostUrl(id, filePath, Astro.currentLocale)}
     class:list={[
-      "text-accent inline-block text-lg font-medium",
-      "decoration-dashed underline-offset-4 hover:underline",
-      "focus-visible:no-underline focus-visible:underline-offset-0",
+      "text-foreground group-hover:text-accent inline-block text-lg leading-snug font-bold tracking-tight transition-colors sm:text-xl",
+      "after:absolute after:inset-0 after:rounded-xl",
+      "focus-visible:outline-none",
     ]}
   >
     <Heading transition:name={toTransitionName(id)}>
       {title}
     </Heading>
   </a>
-  <Datetime {...props} />
-  <p>{description}</p>
+
+  <p class="text-muted-foreground mt-2 line-clamp-3 text-sm leading-relaxed sm:line-clamp-none">
+    {description}
+  </p>
 </li>

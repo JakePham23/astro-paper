@@ -7,6 +7,7 @@ import config from "@/config";
 import "@/styles/global.css";
 import CustomHead from "@/custom/Head.astro";
 import CustomBodyEnd from "@/custom/BodyEnd.astro";
+import SearchModal from "@/components/SearchModal.astro";
 
 type Props = {
   title?: string;
@@ -43,6 +44,10 @@ const rssHref = getAssetPath("rss.xml");
     <meta name="generator" content={Astro.generator} />
 
     <!-- Font -->
+    <Font
+      cssVariable="--font-plus-jakarta-sans"
+      preload={[{ subset: "latin", weight: 400, style: "normal" }]}
+    />
     <Font
       cssVariable="--font-google-sans-code"
       preload={[{ subset: "latin", weight: 400, style: "normal" }]}
@@ -104,11 +109,13 @@ const rssHref = getAssetPath("rss.xml");
           "(prefers-color-scheme: dark)"
         ).matches;
         const theme = stored ?? (prefersDark ? "dark" : "light");
+        const palette = localStorage.getItem("palette") ?? "coastal";
         const root = document.firstElementChild;
         root?.setAttribute("data-theme", theme);
+        root?.setAttribute("data-palette", palette);
         root?.classList.toggle("dark", theme === "dark");
         // Expose value so theme.ts can skip re-detection.
-        window.__theme = { value: theme };
+        window.__theme = { value: theme, palette };
       })();
     </script>
 
@@ -120,8 +127,10 @@ const rssHref = getAssetPath("rss.xml");
     class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
   >
     <slot />
+    {config.features.search !== false && <SearchModal />}
     <script>
       import "@/scripts/theme";
+      import "@/scripts/mermaid";
     </script>
     <CustomBodyEnd />
   </body>

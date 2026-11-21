@@ -13,8 +13,19 @@
       @apply text-foreground mb-3;
     }
 
+    h1,
+    h2,
+    h3,
+    h4 {
+      @apply tracking-tight;
+    }
+
+    h2 {
+      @apply text-xl sm:text-2xl;
+    }
+
     h3 {
-      @apply italic;
+      @apply text-lg sm:text-xl italic;
     }
 
     p,
@@ -62,7 +73,7 @@
     table {
       th,
       td {
-        @apply border-border border p-2;
+        @apply border-border border px-2.5 py-2 text-sm;
       }
 
       th {
@@ -86,7 +97,7 @@
     }
 
     .table-wrapper {
-      @apply outline-accent my-7 overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-dashed;
+      @apply outline-accent my-6 overflow-x-auto rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-dashed;
 
       table {
         @apply my-0;
@@ -94,7 +105,7 @@
     }
 
     code {
-      @apply bg-muted/75 text-foreground rounded p-1 wrap-break-word before:content-none after:content-none;
+      @apply bg-muted/75 text-foreground rounded p-1 font-mono wrap-break-word before:content-none after:content-none;
     }
 
     .astro-code code {
@@ -114,7 +125,7 @@
     }
 
     pre {
-      @apply focus-visible:outline-accent focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-dashed;
+      @apply focus-visible:outline-accent overflow-x-auto rounded-lg text-[13px] leading-relaxed focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-dashed sm:text-sm;
     }
   }
 
@@ -142,5 +153,109 @@
     .highlighted-word {
       @apply border-border rounded-sm border px-0.5 py-px;
     }
+  }
+
+  /* ===== Mermaid Diagrams ===== */
+  .mermaid-diagram {
+    @apply border-border bg-muted/20 relative my-6 overflow-hidden rounded-xl border;
+  }
+
+  .mermaid-diagram-scroll {
+    @apply overflow-x-auto p-3 pt-10 sm:p-5 sm:pt-11;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mermaid-diagram-inner {
+    @apply flex cursor-zoom-in justify-center;
+  }
+
+  .mermaid-zoom-btn {
+    @apply border-border bg-background/90 text-muted-foreground hover:border-accent/60 hover:text-accent absolute top-2 z-2 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium backdrop-blur-sm transition-colors;
+    inset-inline-end: 0.5rem;
+  }
+
+  .mermaid-diagram svg {
+    display: block;
+    margin-inline: auto;
+    height: auto;
+    max-width: 100%;
+  }
+
+  @media (max-width: 639px) {
+    .mermaid-diagram svg.mermaid-wide {
+      min-width: var(--mermaid-min-w, 520px);
+      max-width: none;
+    }
+  }
+
+  /* ===== Mermaid Fullscreen Lightbox ===== */
+  .mermaid-lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    overflow: hidden;
+  }
+
+  .mermaid-lightbox[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mermaid-lightbox::backdrop {
+    background: rgb(0 0 0 / 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  .mermaid-lightbox-toolbar {
+    @apply border-border bg-background/95 flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5;
+    padding-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+  }
+
+  .mermaid-lightbox-controls {
+    @apply flex items-center gap-1.5;
+  }
+
+  .mermaid-lightbox-btn {
+    @apply border-border bg-muted/40 text-foreground hover:border-accent/60 hover:text-accent inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2.5 text-xs font-medium transition-colors sm:h-8 sm:min-w-8;
+  }
+
+  .mermaid-lightbox-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--color-border) 55%, transparent) 1px,
+        transparent 1px
+      )
+      0 0 / 20px 20px;
+  }
+
+  .mermaid-lightbox-stage[data-dragging="true"] {
+    cursor: grabbing;
+  }
+
+  .mermaid-lightbox-canvas {
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .mermaid-lightbox-canvas svg {
+    display: block;
+    max-width: none;
+    max-height: none;
   }
 }

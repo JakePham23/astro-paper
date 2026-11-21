@@ -151,7 +151,7 @@ const items = withToc ? buildTocTree(headings) : [];
 <style is:global>
   .post-fab {
     position: fixed;
-    inset-block-end: 2rem;
+    inset-block-end: calc(1.5rem + env(safe-area-inset-bottom, 0px));
     inset-inline-end: 1rem;
     z-index: 50;
     opacity: 0;
@@ -232,7 +232,7 @@ const items = withToc ? buildTocTree(headings) : [];
   .toc-popover {
     position: fixed;
     inset: auto;
-    inset-block-end: 6.25rem;
+    inset-block-end: calc(5.75rem + env(safe-area-inset-bottom, 0px));
     inset-inline-end: 1rem;
     margin: 0;
     width: min(20rem, calc(100vw - 2rem));

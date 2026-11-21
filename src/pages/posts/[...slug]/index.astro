@@ -14,6 +14,7 @@ import ShareLinks from "./_components/ShareLinks.astro";
 import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
+import PostSidebar from "./_components/PostSidebar.astro";
 import PostToc from "./_components/PostToc.astro";
 import PostEnd from "@/custom/PostEnd.astro";
 import config from "@/config";
@@ -119,7 +120,7 @@ const ogImage = ogImageUrl
   >
     <h1
       style={{ viewTransitionName: toTransitionName(post.id) }}
-      class="text-accent inline-block text-2xl font-bold sm:text-3xl"
+      class="text-accent inline-block text-2xl leading-tight font-bold tracking-tight sm:text-3xl"
     >
       {title}
     </h1>
@@ -138,7 +139,8 @@ const ogImage = ogImageUrl
       <EditPost {hideEditPost} {post} class="max-sm:hidden" />
     </div>
 
-    <div class="post-body mt-8">
+    <div class="post-body relative mt-5 sm:mt-8">
+      <PostSidebar currentId={post.id} currentFilePath={post.filePath} />
       <PostToc headings={tocHeadings} />
       <article
         id="article"
@@ -158,7 +160,7 @@ const ogImage = ogImageUrl
 
     <div class="sm:my-8 sm:flex sm:items-start sm:justify-between sm:gap-8">
       <div class="mt-4 mb-8 flex items-start justify-between gap-4 sm:my-0">
-        <ul class="flex flex-wrap gap-4">
+        <ul class="flex flex-wrap gap-2 sm:gap-2.5">
           {
             tags.map(tag => (
               <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />
@@ -237,7 +239,9 @@ const ogImage = ogImageUrl
 
   function attachCopyButtons() {
     const copyButtonLabel = "Copy";
-    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+    const codeBlocks = Array.from(
+      document.querySelectorAll('pre:not([data-language="mermaid"])')
+    );
 
     for (const codeBlock of codeBlocks) {
       const wrapper = document.createElement("div");

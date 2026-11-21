@@ -1,6 +1,8 @@
 const THEME_KEY = "theme";
+const PALETTE_KEY = "palette";
 const LIGHT = "light";
 const DARK = "dark";
+const DEFAULT_PALETTE = "coastal";
 
 function getPreferredTheme(): string {
   const stored = localStorage.getItem(THEME_KEY);
@@ -10,21 +12,40 @@ function getPreferredTheme(): string {
     : LIGHT;
 }
 
+function getPreferredPalette(): string {
+  return localStorage.getItem(PALETTE_KEY) ?? DEFAULT_PALETTE;
+}
+
 // Reuse the value already set by the inline FOUC-prevention script if available.
-let themeValue: string =
-  (window as unknown as { __theme?: { value: string } }).__theme?.value ??
-  getPreferredTheme();
+const initialWin = window as unknown as {
+  __theme?: { value: string; palette?: string };
+};
+let themeValue: string = initialWin.__theme?.value ?? getPreferredTheme();
+let paletteValue: string =
+  initialWin.__theme?.palette ?? getPreferredPalette();
 
 function persist(): void {
   localStorage.setItem(THEME_KEY, themeValue);
+  localStorage.setItem(PALETTE_KEY, paletteValue);
   reflect();
 }
 
 function reflect(): void {
   const root = document.firstElementChild;
   root?.setAttribute("data-theme", themeValue);
+  root?.setAttribute("data-palette", paletteValue);
   root?.classList.toggle("dark", themeValue === DARK);
   document.querySelector("#theme-btn")?.setAttribute("aria-label", themeValue);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-palette-btn]")
+    .forEach(btn => {
+      const isActive = btn.dataset.paletteBtn === paletteValue;
+      btn.setAttribute("aria-pressed", String(isActive));
+      btn.classList.toggle("ring-2", isActive);
+      btn.classList.toggle("ring-foreground", isActive);
+      btn.classList.toggle("ring-offset-2", isActive);
+    });
 
   // Fill <meta name="theme-color"> with the computed background colour so
   // Android's browser chrome matches the page background.
@@ -40,6 +61,17 @@ function setup(): void {
     themeValue = themeValue === LIGHT ? DARK : LIGHT;
     persist();
   });
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-palette-btn]")
+    .forEach(btn => {
+      btn.addEventListener("click", () => {
+        const next = btn.dataset.paletteBtn;
+        if (!next) return;
+        paletteValue = next;
+        persist();
+      });
+    });
 }
 
 setup();

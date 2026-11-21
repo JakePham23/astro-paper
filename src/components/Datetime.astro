@@ -38,23 +38,29 @@ const date = datetime.format("D MMM, YYYY");
 ---
 
 <div
-  class:list={["text-muted-foreground flex items-center gap-x-2", className]}
+  class:list={["text-muted-foreground flex items-center gap-x-1.5", className]}
 >
   <IconCalendar
     class:list={[
-      "inline-block size-6 min-w-5.5",
-      { "scale-90": size === "sm" },
+      "inline-block shrink-0",
+      { "size-4": size === "sm", "size-5": size === "lg" },
     ]}
   />
   {
     isModified && (
-      <span class:list={["text-sm", { "sm:text-base": size === "lg" }]}>
+      <span
+        class:list={[
+          { "text-xs sm:text-sm": size === "sm", "text-sm sm:text-base": size === "lg" },
+        ]}
+      >
         {t.post.updatedAt}:
       </span>
     )
   }
   <time
-    class:list={["text-sm", { "sm:text-base": size === "lg" }]}
+    class:list={[
+      { "text-xs sm:text-sm": size === "sm", "text-sm sm:text-base": size === "lg" },
+    ]}
     datetime={datetime.toISOString()}
   >
     {date}

@@ -60,7 +60,7 @@ const isActive = (path: string) => {
     >
       <button
         id="menu-btn"
-        class="focus-outline self-end p-2 sm:hidden"
+        class="focus-outline flex size-10 items-center justify-center self-end p-2 sm:hidden"
         aria-label={t.a11y.openMenu}
         aria-expanded="false"
         aria-controls="menu-items"
@@ -72,7 +72,7 @@ const isActive = (path: string) => {
       </button>
       <ul
         id="menu-items"
-        class="[&>li>a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-3 [&>li>a]:text-center [&>li>a]:font-medium sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
+        class="[&>li>a]:hover:text-accent mt-4 hidden w-full max-w-xs grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:max-w-none sm:gap-x-5 sm:gap-y-0 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-2.5 [&>li>a]:text-center [&>li>a]:font-medium sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
       >
         <li class="col-span-2">
           <a
@@ -80,6 +80,14 @@ const isActive = (path: string) => {
             class:list={{ "active-nav": isActive("/posts") }}
           >
             {t.nav.posts}
+          </a>
+        </li>
+        <li class="col-span-2">
+          <a
+            href={getRelativeLocaleUrl(locale, "topics")}
+            class:list={{ "active-nav": isActive("/topics") }}
+          >
+            Topics
           </a>
         </li>
         <li class="col-span-2">
@@ -125,21 +133,25 @@ const isActive = (path: string) => {
         {
           features.search !== false && (
             <li class="col-span-1 flex items-center justify-center">
-              <LinkButton
-                href={getRelativeLocaleUrl(locale, "search")}
-                class:list={["focus-outline relative size-8"]}
-                title={t.nav.search}
+              <button
+                type="button"
+                data-open-search
+                class:list={[
+                  "focus-outline flex size-12 items-center justify-center transition-colors sm:h-8 sm:w-auto sm:gap-1.5 sm:rounded-lg sm:border sm:px-2.5 sm:text-xs",
+                  "sm:border-border sm:bg-muted/35 sm:text-muted-foreground",
+                  "hover:text-accent sm:hover:border-accent/60 sm:hover:text-accent",
+                ]}
+                title={`${t.nav.search} (⌘K / Ctrl+K)`}
                 aria-label={t.nav.search}
               >
-                <IconSearch class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" />
-                <span class="sr-only">{t.nav.search}</span>
-                {isActive("/search") && (
-                  <IconUnderline
-                    aria-hidden="true"
-                    class="absolute bottom-0 w-6 scale-125 max-sm:inset-s-2"
-                  />
-                )}
-              </LinkButton>
+                <IconSearch class="size-6 sm:size-4" />
+                <span class="hidden font-medium md:inline">
+                  {t.nav.search}
+                </span>
+                <kbd class="border-border bg-background hidden rounded border px-1 py-0.2 font-mono text-[10px] sm:inline-block">
+                  ⌘K
+                </kbd>
+              </button>
             </li>
           )
         }
@@ -159,6 +171,50 @@ const isActive = (path: string) => {
             </li>
           )
         }
+        <li class="col-span-2 mt-1 flex items-center justify-center sm:mt-0">
+          <div
+            role="group"
+            aria-label="Color palette"
+            class="border-border bg-muted/40 flex items-center gap-3 rounded-full border px-3.5 py-2 sm:gap-1.5 sm:px-2 sm:py-1"
+          >
+            <button
+              type="button"
+              data-palette-btn="coastal"
+              title="Coastal Cream & Navy"
+              aria-label="Coastal Cream & Navy palette"
+              aria-pressed="false"
+              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+              style="background: linear-gradient(135deg, #fbf7ee 50%, #0e6380 50%);"
+            ></button>
+            <button
+              type="button"
+              data-palette-btn="citrus"
+              title="Citrus Gallery"
+              aria-label="Citrus Gallery palette"
+              aria-pressed="false"
+              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+              style="background: linear-gradient(135deg, #fcf8ee 50%, #a84b08 50%);"
+            ></button>
+            <button
+              type="button"
+              data-palette-btn="forest"
+              title="Forest Sage"
+              aria-label="Forest Sage palette"
+              aria-pressed="false"
+              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+              style="background: linear-gradient(135deg, #f7faf4 50%, #14532d 50%);"
+            ></button>
+            <button
+              type="button"
+              data-palette-btn="alpine"
+              title="Alpine Sky & Slate"
+              aria-label="Alpine Sky & Slate palette"
+              aria-pressed="false"
+              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+              style="background: linear-gradient(135deg, #f3f8fd 50%, #0969c7 50%);"
+            ></button>
+          </div>
+        </li>
       </ul>
     </nav>
   </div>
