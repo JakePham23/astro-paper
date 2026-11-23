@@ -4,6 +4,7 @@ export default {
   nav: {
     home: "Home",
     posts: "Posts",
+    topics: "Topics",
     tags: "Tags",
     about: "About",
     archives: "Archives",
@@ -29,6 +30,11 @@ export default {
     page: "Page",
   },
   home: {
+    heroTitle: "Engineering Knowledge Base",
+    heroIntro:
+      "A structured collection of technical notes, architectures, and practical playbooks covering Claude CLI & multi-agent workflows, SDLC, Senior Backend, Databases, Systems, AWS Cloud, and RAG/Code Intelligence.",
+    heroSub: "Browse by topic tree in",
+    browseTopics: "Knowledge Map",
     socialLinks: "Social Links",
     featured: "Featured",
     recentPosts: "Recent Posts",
@@ -47,12 +53,46 @@ export default {
 
     postsTitle: "Posts",
     postsDesc: "All the articles I've posted.",
+    viewByTopics: "Browse by folder tree (Topics) →",
 
     archivesTitle: "Archives",
     archivesDesc: "All the articles I've archived.",
 
     searchTitle: "Search",
     searchDesc: "Search any article ...",
+  },
+  topics: {
+    title: "Topics",
+    pageTitle: "Knowledge Map",
+    pageDesc:
+      "All {{count}} articles organized by folder tree for quick overview and navigation.",
+    filterPlaceholder: "Filter articles by title, file name, or tag...",
+    tocLabel: "Topics Index",
+    backToTop: "↑ Back to top",
+    articleCount: "{{count}} posts",
+    viewPostsList: "← View as card list (Posts)",
+  },
+  sidebar: {
+    allTopicsLink: "← View full Knowledge Map",
+    knowledgeMapLink: "← Knowledge Map",
+  },
+  searchModal: {
+    ariaLabel: "Quick search",
+    placeholder: "Search articles, topics, tags...",
+    closeLabel: "Close search",
+    resultsLabel: "Search results",
+    hintSelect: "select",
+    hintOpen: "open",
+    hintClose: "close",
+    fullTextLink: "Full-text search (Pagefind) →",
+    emptyPrompt: "Type keywords to search articles, headings, or tags.",
+    noResults: "No matching articles found.",
+    loading: "Loading search index...",
+    error: "Failed to load search index.",
+  },
+  langSwitch: {
+    label: "Switch language",
+    switchTo: "Switch to Vietnamese",
   },
   a11y: {
     skipToContent: "Skip to content",

@@ -1,9 +1,14 @@
 ---
-import { getCollection } from "astro:content";
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { BLOG_PATH } from "@/content.config";
 import { getPostUrl } from "@/utils/getPostPaths";
 import { postFilter } from "@/utils/postFilter";
+import {
+  getPostFolderAndFile,
+  getPostsByLocale,
+  normalizeLocale,
+} from "@/utils/i18nPosts";
+import { getTopicMeta } from "@/i18n/topics";
+import { useTranslations } from "@/i18n";
 import config from "@/config";
 
 type Props = {
@@ -12,37 +17,15 @@ type Props = {
 };
 
 const { currentId, currentFilePath } = Astro.props;
-const locale = Astro.currentLocale ?? config.site.lang;
+const locale = normalizeLocale(Astro.currentLocale ?? config.site.lang);
+const t = useTranslations(locale);
 
-const FOLDER_LABELS: Record<string, string> = {
-  "00-root": "00 · Tổng quan",
-  "01-claude-cli-multi-agent": "01 · Claude CLI & Multi-Agent",
-  "02-quy-trinh-phan-mem": "02 · Quy trình phần mềm",
-  "03-ap-dung-voi-agent": "03 · Áp dụng với Agent",
-  "04-mau": "04 · Mẫu tài liệu",
-  "05-backend-senior": "05 · Backend Senior",
-  "06-database-chuyen-sau": "06 · Database chuyên sâu",
-  "07-he-thong-server": "07 · Hệ thống & Server",
-  "08-aws-cloud": "08 · AWS Cloud",
-  "09-rag-agent-code-intelligence": "09 · RAG, Agent & Code Intel",
-  "10-review-sach": "10 · Review Sách",
-};
-
-function getFolderAndFile(filePath: string | undefined, fallbackId: string) {
-  const rel = (filePath ?? "").replace(BLOG_PATH, "").replace(/^\/+/, "");
-  const parts = rel.split("/").filter(Boolean);
-  return {
-    folder: parts.length > 1 ? parts[0] : "00-root",
-    fileName: parts[parts.length - 1] ?? fallbackId,
-  };
-}
-
-const current = getFolderAndFile(currentFilePath, currentId);
-const allPosts = await getCollection("posts", postFilter);
+const current = getPostFolderAndFile(currentFilePath, currentId);
+const allPosts = await getPostsByLocale(locale, postFilter);
 
 const siblingPosts = allPosts
   .map(p => {
-    const meta = getFolderAndFile(p.filePath, p.id);
+    const meta = getPostFolderAndFile(p.filePath, p.id);
     return {
       id: p.id,
       title: p.data.title,
@@ -54,7 +37,7 @@ const siblingPosts = allPosts
   .filter(p => p.folder === current.folder)
   .sort((a, b) => a.fileName.localeCompare(b.fileName));
 
-const folderLabel = FOLDER_LABELS[current.folder] ?? current.folder;
+const folderLabel = getTopicMeta(current.folder, locale).shortLabel;
 const currentIndex = siblingPosts.findIndex(p => p.id === currentId) + 1;
 ---
 
@@ -103,7 +86,7 @@ const currentIndex = siblingPosts.findIndex(p => p.id === currentId) + 1;
               href={getRelativeLocaleUrl(locale, "topics")}
               class="text-muted-foreground hover:text-accent inline-block py-1 text-xs"
             >
-              ← Xem toàn bộ Knowledge Map
+              {t.sidebar.allTopicsLink}
             </a>
           </div>
         </div>
@@ -116,7 +99,7 @@ const currentIndex = siblingPosts.findIndex(p => p.id === currentId) + 1;
               href={getRelativeLocaleUrl(locale, "topics")}
               class="sidebar-all-link"
             >
-              ← Knowledge Map
+              {t.sidebar.knowledgeMapLink}
             </a>
             <h2 class="sidebar-title">{folderLabel}</h2>
           </div>

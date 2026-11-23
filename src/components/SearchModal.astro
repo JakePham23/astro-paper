@@ -3,10 +3,16 @@ import { getRelativeLocaleUrl } from "astro:i18n";
 import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconX from "@/assets/icons/IconX.svg";
 import { getAssetPath } from "@/utils/withBase";
+import { normalizeLocale } from "@/utils/i18nPosts";
+import { useTranslations } from "@/i18n";
 import config from "@/config";
 
-const locale = Astro.currentLocale ?? config.site.lang;
-const indexUrl = getAssetPath("search-index.json");
+const locale = normalizeLocale(Astro.currentLocale ?? config.site.lang);
+const t = useTranslations(locale);
+const indexUrl =
+  locale === "en"
+    ? getAssetPath("en/search-index.json")
+    : getAssetPath("search-index.json");
 const searchUrl = getRelativeLocaleUrl(locale, "search");
 const topicsUrl = getRelativeLocaleUrl(locale, "topics");
 const tagsUrl = getRelativeLocaleUrl(locale, "tags");
@@ -15,11 +21,15 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
 <dialog
   id="quick-search-modal"
   class="quick-search-dialog"
-  aria-label="Tìm kiếm nhanh"
+  aria-label={t.searchModal.ariaLabel}
+  data-locale={locale}
   data-index-url={indexUrl}
   data-search-url={searchUrl}
   data-topics-url={topicsUrl}
   data-tags-url={tagsUrl}
+  data-loading-text={t.searchModal.loading}
+  data-error-text={t.searchModal.error}
+  data-no-results-text={t.searchModal.noResults}
   data-pagefind-ignore
 >
   <div class="quick-search-panel">
@@ -30,13 +40,13 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
         type="search"
         autocomplete="off"
         spellcheck="false"
-        placeholder="Tìm bài viết, chủ đề, tag... (hỗ trợ không dấu)"
+        placeholder={t.searchModal.placeholder}
         class="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base focus:outline-none"
       />
       <button
         type="button"
         data-close-search
-        aria-label="Đóng tìm kiếm"
+        aria-label={t.searchModal.closeLabel}
         class="border-border bg-muted/50 text-muted-foreground hover:border-accent/60 hover:text-accent inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 font-mono text-xs transition-colors"
       >
         <span class="hidden sm:inline">ESC</span>
@@ -47,7 +57,7 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     <div
       id="quick-search-results"
       role="listbox"
-      aria-label="Kết quả tìm kiếm"
+      aria-label={t.searchModal.resultsLabel}
       class="max-h-[60dvh] overflow-y-auto overscroll-contain p-2 sm:p-3"
     >
     </div>
@@ -55,16 +65,16 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     <div class="quick-search-footer">
       <span class="text-muted-foreground hidden text-xs sm:inline">
         <kbd class="quick-kbd">↑</kbd>
-        <kbd class="quick-kbd">↓</kbd> chọn ·
-        <kbd class="quick-kbd">↵</kbd> mở ·
-        <kbd class="quick-kbd">Esc</kbd> đóng
+        <kbd class="quick-kbd">↓</kbd> {t.searchModal.hintSelect} ·
+        <kbd class="quick-kbd">↵</kbd> {t.searchModal.hintOpen} ·
+        <kbd class="quick-kbd">Esc</kbd> {t.searchModal.hintClose}
       </span>
       <a
         id="quick-search-pagefind-link"
         href={searchUrl}
         class="text-accent ms-auto text-xs font-medium hover:underline"
       >
-        Tìm toàn văn (Pagefind) →
+        {t.searchModal.fullTextLink}
       </a>
     </div>
   </div>
@@ -91,8 +101,8 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     nCombined: string;
   };
 
-  let cachedItems: IndexedItem[] | null = null;
-  let fetchPromise: Promise<IndexedItem[]> | null = null;
+  const cachedItemsByUrl = new Map<string, IndexedItem[]>();
+  const fetchPromiseByUrl = new Map<string, Promise<IndexedItem[]>>();
 
   function normalizeVi(str: string): string {
     return str
@@ -113,15 +123,17 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
   }
 
   async function loadSearchIndex(indexUrl: string): Promise<IndexedItem[]> {
-    if (cachedItems) return cachedItems;
-    if (!fetchPromise) {
-      fetchPromise = fetch(indexUrl)
+    const existing = cachedItemsByUrl.get(indexUrl);
+    if (existing) return existing;
+    let pending = fetchPromiseByUrl.get(indexUrl);
+    if (!pending) {
+      pending = fetch(indexUrl)
         .then(res => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json() as Promise<SearchItem[]>;
         })
         .then(items => {
-          cachedItems = items.map(item => {
+          const indexed = items.map(item => {
             const nTitle = normalizeVi(item.title);
             const nDesc = normalizeVi(item.description);
             const nFolder = normalizeVi(item.folderLabel);
@@ -137,14 +149,16 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
               nCombined: `${nTitle} ${nFolder} ${nTags} ${nHeadings.join(" ")} ${nDesc}`,
             };
           });
-          return cachedItems;
+          cachedItemsByUrl.set(indexUrl, indexed);
+          return indexed;
         })
         .catch(err => {
-          fetchPromise = null;
+          fetchPromiseByUrl.delete(indexUrl);
           throw err;
         });
+      fetchPromiseByUrl.set(indexUrl, pending);
     }
-    return fetchPromise;
+    return pending;
   }
 
   function searchItems(
@@ -235,26 +249,27 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     items: IndexedItem[],
     topicsUrl: string,
     tagsUrl: string,
-    searchUrl: string
+    searchUrl: string,
+    isEn: boolean
   ): string {
     const featured = items.filter(i => i.featured).slice(0, 6);
     const quickLinks = `
       <div class="mb-3">
         <div class="text-muted-foreground mb-1.5 px-2 font-mono text-[11px] font-semibold uppercase tracking-wider">
-          Điều hướng nhanh
+          ${isEn ? "Quick navigation" : "Điều hướng nhanh"}
         </div>
         <div class="grid gap-1.5 sm:grid-cols-3">
           <a href="${escapeHtml(topicsUrl)}" data-search-result class="quick-result-chip">
             <span>Knowledge Map</span>
-            <span class="text-muted-foreground font-mono text-[11px]">/topics</span>
+            <span class="text-muted-foreground font-mono text-[11px]">${isEn ? "/en/topics" : "/topics"}</span>
           </a>
           <a href="${escapeHtml(tagsUrl)}" data-search-result class="quick-result-chip">
-            <span>Tất cả Tags</span>
-            <span class="text-muted-foreground font-mono text-[11px]">/tags</span>
+            <span>${isEn ? "All Tags" : "Tất cả Tags"}</span>
+            <span class="text-muted-foreground font-mono text-[11px]">${isEn ? "/en/tags" : "/tags"}</span>
           </a>
           <a href="${escapeHtml(searchUrl)}" data-search-result class="quick-result-chip">
-            <span>Tìm toàn văn</span>
-            <span class="text-muted-foreground font-mono text-[11px]">Pagefind</span>
+            <span>${isEn ? "Full-text search" : "Tìm toàn văn"}</span>
+            <span class="text-muted-foreground font-mono text-[11]">Pagefind</span>
           </a>
         </div>
       </div>
@@ -265,7 +280,7 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
         ? `
       <div>
         <div class="text-muted-foreground mb-1.5 px-2 font-mono text-[11px] font-semibold uppercase tracking-wider">
-          Bài viết nổi bật
+          ${isEn ? "Featured posts" : "Bài viết nổi bật"}
         </div>
         <ul class="space-y-1">
           ${featured
@@ -298,8 +313,9 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     topicsUrl: string,
     tagsUrl: string
   ) {
-    const { results, pagefindLink } = getModalElements();
+    const { dialog, results, pagefindLink } = getModalElements();
     if (!results) return;
+    const isEn = dialog?.dataset.locale === "en";
 
     const trimmed = rawQuery.trim();
     if (pagefindLink) {
@@ -309,23 +325,38 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     }
 
     if (!trimmed) {
-      results.innerHTML = renderEmptyState(items, topicsUrl, tagsUrl, searchUrl);
+      results.innerHTML = renderEmptyState(
+        items,
+        topicsUrl,
+        tagsUrl,
+        searchUrl,
+        isEn
+      );
       setActiveResult(0);
       return;
     }
 
     const matches = searchItems(items, trimmed);
     if (matches.length === 0) {
+      const noMatchTitle = isEn
+        ? `No title or tag matches "${escapeHtml(trimmed)}"`
+        : `Không tìm thấy tiêu đề hoặc tag khớp với "${escapeHtml(trimmed)}"`;
+      const noMatchHint = isEn
+        ? "Try searching full article content with Pagefind:"
+        : "Thử tìm trong toàn bộ nội dung bài viết bằng Pagefind:";
+      const noMatchCta = isEn
+        ? `Search "${escapeHtml(trimmed)}" with Pagefind →`
+        : `Tìm "${escapeHtml(trimmed)}" với Pagefind →`;
       results.innerHTML = `
         <div class="px-4 py-8 text-center">
-          <p class="text-foreground text-sm font-medium">Không tìm thấy tiêu đề hoặc tag khớp với "${escapeHtml(trimmed)}"</p>
-          <p class="text-muted-foreground mt-1 text-xs">Thử tìm trong toàn bộ nội dung bài viết bằng Pagefind:</p>
+          <p class="text-foreground text-sm font-medium">${noMatchTitle}</p>
+          <p class="text-muted-foreground mt-1 text-xs">${noMatchHint}</p>
           <a
             href="${escapeHtml(`${searchUrl}?q=${encodeURIComponent(trimmed)}`)}"
             data-search-result
             class="border-accent/50 bg-accent/10 text-accent mt-3 inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-semibold hover:bg-accent/15"
           >
-            Tìm "${escapeHtml(trimmed)}" với Pagefind →
+            ${noMatchCta}
           </a>
         </div>
       `;
@@ -338,7 +369,7 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
         ${matches
           .map(({ item, matchedHeading }) => {
             const snippet = matchedHeading
-              ? `Mục: ${matchedHeading}`
+              ? `${isEn ? "Section" : "Mục"}: ${matchedHeading}`
               : item.description;
             const tagsHtml = item.tags
               .slice(0, 2)
@@ -386,10 +417,13 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
     const searchUrl = dialog.dataset.searchUrl ?? "/search";
     const topicsUrl = dialog.dataset.topicsUrl ?? "/topics";
     const tagsUrl = dialog.dataset.tagsUrl ?? "/tags";
+    const loadingText =
+      dialog.dataset.loadingText ?? "Đang tải dữ liệu tìm kiếm...";
+    const errorText =
+      dialog.dataset.errorText ?? "Không tải được chỉ mục nhanh.";
 
-    if (results && !cachedItems) {
-      results.innerHTML =
-        '<div class="text-muted-foreground px-4 py-8 text-center text-sm">Đang tải dữ liệu tìm kiếm...</div>';
+    if (results && !cachedItemsByUrl.has(indexUrl)) {
+      results.innerHTML = `<div class="text-muted-foreground px-4 py-8 text-center text-sm">${escapeHtml(loadingText)}</div>`;
     }
 
     try {
@@ -407,8 +441,8 @@ const tagsUrl = getRelativeLocaleUrl(locale, "tags");
       if (results) {
         results.innerHTML = `
           <div class="px-4 py-6 text-center text-sm text-muted-foreground">
-            Không tải được chỉ mục nhanh.
-            <a href="${escapeHtml(searchUrl)}" class="text-accent underline">Mở trang Search →</a>
+            ${escapeHtml(errorText)}
+            <a href="${escapeHtml(searchUrl)}" class="text-accent underline">→</a>
           </div>
         `;
       }

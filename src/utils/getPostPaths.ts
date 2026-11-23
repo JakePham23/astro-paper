@@ -4,15 +4,19 @@ import { slugifyStr } from "./slugify";
 import config from "@/config";
 
 function getPostPathSegments(filePath: string | undefined): string[] {
-  return (
+  const segments =
     filePath
       ?.replace(BLOG_PATH, "")
       .split("/")
       .filter(path => path !== "")
       .filter(path => !path.startsWith("_"))
-      .slice(0, -1)
-      .map(segment => slugifyStr(segment)) ?? []
-  );
+      .slice(0, -1) ?? [];
+
+  if (segments[0] === "vi" || segments[0] === "en") {
+    segments.shift();
+  }
+
+  return segments.map(segment => slugifyStr(segment));
 }
 
 function getIdSlug(id: string): string {

@@ -10,11 +10,18 @@ import IconX from "@/assets/icons/IconX.svg";
 import LinkButton from "./LinkButton.astro";
 import { stripBase, stripLocale } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
+import { normalizeLocale } from "@/utils/i18nPosts";
 import config from "@/config";
 
+type Props = {
+  alternateUrl?: string;
+};
+
+const { alternateUrl } = Astro.props;
 const { site, features } = config;
 
-const locale = Astro.currentLocale ?? config.site.lang;
+const locale = normalizeLocale(Astro.currentLocale ?? config.site.lang);
+const otherLocale = locale === "vi" ? "en" : "vi";
 const t = useTranslations(locale);
 
 // Strip the base prefix so isActive comparisons work regardless of deploy subdirectory.
@@ -26,6 +33,16 @@ const pathWithoutTrailingSlash =
     : relativePath;
 
 const currentPath = stripLocale(pathWithoutTrailingSlash, locale);
+
+const isPostDetail = /^\/posts\/.+/.test(currentPath);
+const logicalRoute = currentPath.replace(/^\/+/, "");
+const switchTargetUrl =
+  alternateUrl ??
+  (isPostDetail
+    ? getRelativeLocaleUrl(otherLocale, "topics")
+    : getRelativeLocaleUrl(otherLocale, logicalRoute));
+const viSwitchUrl = locale === "vi" ? Astro.url.pathname : switchTargetUrl;
+const enSwitchUrl = locale === "en" ? Astro.url.pathname : switchTargetUrl;
 
 const isActive = (path: string) => {
   const currentPathArray = currentPath.split("/").filter(p => p.trim());
@@ -58,21 +75,55 @@ const isActive = (path: string) => {
       id="nav-menu"
       class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"
     >
-      <button
-        id="menu-btn"
-        class="focus-outline flex size-10 items-center justify-center self-end p-2 sm:hidden"
-        aria-label={t.a11y.openMenu}
-        aria-expanded="false"
-        aria-controls="menu-items"
-        data-label-open={t.a11y.openMenu}
-        data-label-close={t.a11y.closeMenu}
-      >
-        <IconX id="close-icon" class="hidden" />
-        <IconMenuDeep id="menu-icon" />
-      </button>
+      <div class="flex items-center gap-2 self-end sm:hidden">
+        <div
+          role="group"
+          aria-label={t.langSwitch.label}
+          class="border-accent/40 bg-muted/40 flex shrink-0 items-center rounded-full border p-0.5 font-mono text-xs font-semibold"
+        >
+          <a
+            href={viSwitchUrl}
+            aria-current={locale === "vi" ? "true" : undefined}
+            title={locale === "en" ? t.langSwitch.switchTo : "Tiếng Việt"}
+            class:list={[
+              "rounded-full px-2 py-0.5 transition-colors",
+              locale === "vi"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            ]}
+          >
+            VI
+          </a>
+          <a
+            href={enSwitchUrl}
+            aria-current={locale === "en" ? "true" : undefined}
+            title={locale === "vi" ? t.langSwitch.switchTo : "English"}
+            class:list={[
+              "rounded-full px-2 py-0.5 transition-colors",
+              locale === "en"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            ]}
+          >
+            EN
+          </a>
+        </div>
+        <button
+          id="menu-btn"
+          class="focus-outline flex size-10 items-center justify-center p-2"
+          aria-label={t.a11y.openMenu}
+          aria-expanded="false"
+          aria-controls="menu-items"
+          data-label-open={t.a11y.openMenu}
+          data-label-close={t.a11y.closeMenu}
+        >
+          <IconX id="close-icon" class="hidden" />
+          <IconMenuDeep id="menu-icon" />
+        </button>
+      </div>
       <ul
         id="menu-items"
-        class="[&>li>a]:hover:text-accent mt-4 hidden w-full max-w-xs grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:max-w-none sm:gap-x-5 sm:gap-y-0 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-2.5 [&>li>a]:text-center [&>li>a]:font-medium sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
+        class="[&>li>a]:hover:text-accent mt-4 hidden w-full max-w-xs grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:max-w-none sm:items-center sm:gap-x-2.5 sm:gap-y-0 md:gap-x-3.5 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-2.5 [&>li>a]:text-center [&>li>a]:font-medium [&>li>a]:whitespace-nowrap sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
       >
         <li class="col-span-2">
           <a
@@ -87,7 +138,7 @@ const isActive = (path: string) => {
             href={getRelativeLocaleUrl(locale, "topics")}
             class:list={{ "active-nav": isActive("/topics") }}
           >
-            Topics
+            {t.nav.topics}
           </a>
         </li>
         <li class="col-span-2">
@@ -145,7 +196,7 @@ const isActive = (path: string) => {
                 aria-label={t.nav.search}
               >
                 <IconSearch class="size-6 sm:size-4" />
-                <span class="hidden font-medium md:inline">
+                <span class="hidden font-medium lg:inline">
                   {t.nav.search}
                 </span>
                 <kbd class="border-border bg-background hidden rounded border px-1 py-0.2 font-mono text-[10px] sm:inline-block">
@@ -171,6 +222,40 @@ const isActive = (path: string) => {
             </li>
           )
         }
+        <li class="col-span-2 mt-1 hidden items-center justify-center sm:mt-0 sm:flex">
+          <div
+            role="group"
+            aria-label={t.langSwitch.label}
+            class="border-accent/40 bg-muted/40 flex shrink-0 items-center rounded-full border p-0.5 font-mono text-xs font-semibold"
+          >
+            <a
+              href={viSwitchUrl}
+              aria-current={locale === "vi" ? "true" : undefined}
+              title={locale === "en" ? t.langSwitch.switchTo : "Tiếng Việt"}
+              class:list={[
+                "rounded-full px-2 py-0.5 transition-colors",
+                locale === "vi"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              ]}
+            >
+              VI
+            </a>
+            <a
+              href={enSwitchUrl}
+              aria-current={locale === "en" ? "true" : undefined}
+              title={locale === "vi" ? t.langSwitch.switchTo : "English"}
+              class:list={[
+                "rounded-full px-2 py-0.5 transition-colors",
+                locale === "en"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              ]}
+            >
+              EN
+            </a>
+          </div>
+        </li>
         <li class="col-span-2 mt-1 flex items-center justify-center sm:mt-0">
           <div
             role="group"
