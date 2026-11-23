@@ -165,6 +165,35 @@ ALTER ROLE reporting SET statement_timeout = '10min';
 -- PG17+: transaction_timeout cho tổng thời gian một transaction
 ```
 
+### 3.3 Ví dụ tính `pg.Pool` cho VPS nhỏ/vừa (2 vCPU / 4 GB RAM) & Wrapper đo Slow Query trong Node.js
+
+- **Công thức số kết nối active tối ưu trên DB Server:**
+  $$\text{Optimal Active Connections} \approx (2 \times \text{vCPU}_{\text{DB}}) + 1 \text{ (với SSD)}$$
+  Với DB **2 vCPU, 4 GB RAM**: số kết nối chạy song song hiệu quả nhất chỉ khoảng **5–10 kết nối active** (`max_connections = 100`). Nếu chạy **2 Node.js instances** (PM2 cluster), chia pool:
+  $$\text{Pool Size mỗi Node} = \left\lfloor \frac{100 - 10 \text{ (admin)}}{2} \right\rfloor \rightarrow \text{chọn } \mathbf{15\text{–}20}$$
+
+- **Cấu hình `pg.Pool` fail-fast & tự log Slow Query (`> 500ms`) trong `db.js`:**
+
+```ts
+const pool = new Pool({
+  max: 15,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 3_000,              // Quá 3s không mượn được kết nối -> fail-fast
+  statement_timeout: 5_000,                    // Hủy câu SQL chạy quá 5s
+  idle_in_transaction_session_timeout: 10_000, // Tự rollback nếu transaction quên COMMIT sau 10s
+});
+
+export async function query(text: string, params?: any[]) {
+  const start = Date.now();
+  const res = await pool.query(text, params);
+  const durationMs = Date.now() - start;
+  if (durationMs > 500) {
+    console.warn(`[SLOW QUERY ${durationMs}ms] rows=${res.rowCount} sql=${text.slice(0, 120)}`);
+  }
+  return res;
+}
+```
+
 ## 4. Tinh chỉnh hệ điều hành (Linux)
 
 | Mục | Khuyến nghị | Lý do |

@@ -29,6 +29,28 @@ flowchart LR
 
 Một reverse proxy/LB làm: phân phối tải, loại bỏ instance hỏng, terminate TLS, định tuyến theo host/path, giới hạn tốc độ, nén, đệm request/response chậm, ẩn cấu trúc nội bộ, gắn header (`X-Request-Id`, `X-Forwarded-*`).
 
+### 1.1 Mô hình ẩn IP Origin Server & Đường đi request đầy đủ
+
+Để người ngoài không bao giờ dò ra IP thật của VPS hoặc chạm trực tiếp vào cổng Node.js (`3001`) / PostgreSQL (`5432`), kết hợp Firewall + Reverse Proxy + Proxy DNS:
+
+```text
+[Trình duyệt Học sinh]  (Chỉ thấy: https://learnhub.vn/api/...)
+       │
+       ▼
+[1. Cloudflare (WAF + Proxy DNS)]  ──► Ẩn IP thật của VPS; chặn DDoS/Bot
+       │  (Firewall VPS chỉ mở port 443 cho dải IP Cloudflare; ĐÓNG port 3001 & 5432)
+       ▼
+[2. Nginx Reverse Proxy]           ──► Chặn /.git, /.env; ẩn server_tokens; gắn X-Request-Id
+       │  (proxy_pass http://127.0.0.1:3001)
+       ▼
+[3. Node.js Express (:3001)]       ──► Lắng nghe 127.0.0.1, không mở ra Internet
+       │
+       ▼
+[4. PostgreSQL (:5432)]            ──► Lắng nghe 127.0.0.1 / Private VPC
+```
+
+Xem chi tiết luồng xử lý bên trong ứng dụng và database tại [../05-backend-senior/00-request-lifecycle-tu-trinh-duyet-den-db.md](../05-backend-senior/00-request-lifecycle-tu-trinh-duyet-den-db.md).
+
 ## 2. L4 và L7
 
 | | L4 (TCP/UDP) | L7 (HTTP) |

@@ -118,6 +118,24 @@ async function dbForRead(userId: string) {
 
 Theo dõi `replication lag`; nếu lag vượt ngưỡng (ví dụ > 2s), chuyển đọc về primary hoặc cảnh báo.
 
+### 2.2 Bảng đối chiếu hạ tầng theo 3 mốc: 1K / 10K / 100K Users
+
+| Hạng mục | 🟢 1,000 – 9,999 Users | 🟡 10,000 – 99,999 Users | 🔴 100,000+ Users |
+| :--- | :--- | :--- | :--- |
+| **Server** | 1 VPS (2 vCPU, 4 GB RAM) chạy chung App (PM2 2 instances) + DB. | Tách App Server (2–4 instances) + DB Server riêng (4 vCPU, 8–16 GB RAM) + Redis. | Auto-scaling cluster (6–15 pods) sau Load Balancer + Primary & 2–3 Read Replicas. |
+| **Connection Pool** | `pg.Pool` trực tiếp (`max: 15` / instance). | **PgBouncer** (`transaction` mode) gom còn ~25 kết nối thật vào PG. | PgBouncer + tách riêng `readPool` (Replicas) và `writePool` (Primary). |
+| **Cache & CDN** | In-Memory `Map` (dữ liệu tĩnh, đề thi hot). | Redis dùng chung + Cloudflare CDN cho ảnh/static. | Redis Cluster (`ZADD` cho Leaderboard, Write-Behind cho `views_count`). |
+| **Phân trang & DB** | `LIMIT / OFFSET` (trần `<= 50`) + B-Tree/GIN Index. | **Cursor Pagination** (`WHERE id < $lastId`) + `tsvector` / `pg_trgm`. | Search engine riêng (Meilisearch/OpenSearch) + **Table Partitioning** theo năm/học kỳ. |
+| **Tác vụ nền** | Async background trong process cho việc phụ nhẹ. | **BullMQ (Redis)** cho Email OTP, chấm bài, tính reputation. | Kafka/BullMQ Workers gom batch 1.000 event `visit_log`/`dwell` ghi 1 lần. |
+
+### 2.3 Chiến lược Timeout 3 tầng (Cascading Timeouts)
+
+Luôn thiết lập timeout giảm dần từ ngoài vào trong để tránh hiệu ứng domino làm cạn sạch connection pool khi DB chậm:
+
+$$\text{Frontend Timeout (10s)} > \text{API HTTP Timeout (8s)} > \text{DB statement\_timeout (5s)}$$
+
+- Ở `pg.Pool`: đặt `connectionTimeoutMillis: 3000` (fail-fast nếu chờ mượn kết nối quá 3s), `statement_timeout: 5000`, và `idle_in_transaction_session_timeout: 10000` (tự rollback nếu transaction quên `COMMIT`).
+
 ---
 
 ## 3. Stateless, scale ngang, autoscaling

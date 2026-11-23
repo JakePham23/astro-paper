@@ -160,6 +160,32 @@ ANALYZE exam_attempts;
 
 Tìm kiếm có dấu tiếng Việt: dùng extension `unaccent` + `pg_trgm` (GIN) cho `ILIKE '%từ khóa%'`; full-text cấu hình `simple` + `unaccent`. Khi cần xếp hạng, gợi ý, đa ngôn ngữ nghiêm túc → OpenSearch/Elasticsearch ([10-chon-database-nosql-search.md](10-chon-database-nosql-search.md)).
 
+### 6.1 Giải phẫu B-Tree (B+Tree): Cơ chế rẽ nhánh Trái / Giữa / Phải & Cân bằng cây
+
+#### 1. Khác biệt với Cây nhị phân (BST)
+Trong BST thường, mỗi node chỉ có 1 khóa nên 1 triệu dòng cần cây cao ~20 tầng. Trong **B+Tree của PostgreSQL**, mỗi node là một trang đĩa **8 KB** chứa hàng trăm khóa sắp xếp tăng dần $[K_1, K_2, \dots, K_m]$ làm **"cột mốc phân làn" (Separator Keys)** — nhờ đó **1 triệu dòng chỉ cần cây cao 3–4 tầng** (`< 0.5ms`):
+
+```text
+                  [  K1 = 100   |   K2 = 500  ]   <-- Root Page (8 KB)
+                 /              |              \
+     Nhánh Trái (< 100)   Nhánh Giữa (100..499)  Nhánh Phải (>= 500)
+            ▼                   ▼                       ▼
+     [ 10 | 42 | 85 ]    [ 100 | 250 | 410 ]     [ 500 | 720 | 990 ]  <-- Leaf Pages
+            │                    │
+       ctid=(18,4)          ctid=(52,1)   (Tọa độ dòng thật trên heap)
+            ◄────────────────────┴────────────────────► (Nối ngang bằng Doubly Linked List)
+```
+
+#### 2. Quy tắc so sánh rẽ nhánh theo kiểu dữ liệu
+- **Số (`INT`, `NUMERIC`) & `TIMESTAMP`:** So sánh giá trị số trực tiếp (`42 < 100` $\rightarrow$ rẽ Trái).
+- **Chuỗi (`TEXT`, `VARCHAR`):** So sánh theo **thứ tự từ điển từ trái sang phải** (`'alice' < 'bob'`, `'jakepham' < 'john'`). Đó là lý do `LIKE 'jake%'` dùng được B-Tree (biết 4 ký tự đầu), còn `LIKE '%jake%'` thì **mất Index** vì đứng ở Root không biết ký tự đầu là `'a'` hay `'z'` để rẽ nhánh.
+- **Composite Index `(exam_id, score)`:** So sánh cột bên trái (`exam_id`) trước; chỉ khi `exam_id` bằng nhau mới xét tiếp `score`. Vì vậy truy vấn `WHERE score = 9` (thiếu `exam_id` đứng đầu) không dùng được nhánh chia của Root.
+
+#### 3. Tự cân bằng từ dưới lên (Bottom-Up 50/50 Split)
+Khi chèn `id = 1, 2, 3, 4...` tăng dần, dữ liệu mới luôn đi vào **Node Lá**. Khi một Leaf Page đầy 8 KB, PostgreSQL cắt đôi 50/50 thành 2 trang Trái–Phải và đẩy khóa ở chính giữa (**Median Key**) lên Node Cha làm cột mốc mới — đảm bảo mọi nhánh luôn có chiều cao bằng nhau 100%.
+
+> ⚠️ **Lưu ý cực quan trọng:** PostgreSQL **tự động tạo Index cho `PRIMARY KEY` và `UNIQUE`**, nhưng **KHÔNG tự động tạo Index cho `FOREIGN KEY`**! Với các cột khóa ngoại hay dùng để `JOIN`/`WHERE` (`exam_attempts(user_id)`, `exam_attempts(exam_id)`, `refresh_tokens(user_id)`, `Question(LessonTypeId)`), bắt buộc phải tự viết `CREATE INDEX`.
+
 ## 7. Thiết kế index B-tree
 
 ### Thứ tự cột trong index nhiều cột

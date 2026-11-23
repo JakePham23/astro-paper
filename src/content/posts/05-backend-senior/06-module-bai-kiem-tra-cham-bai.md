@@ -234,6 +234,37 @@ flowchart LR
 - Scale runner theo độ dài hàng đợi (KEDA/autoscaling). Đỉnh nộp cuối giờ → chấp nhận trễ vài phút, không cần chấm tức thì.
 - Test case ẩn không gửi về client; chỉ trả "pass x/y" theo chính sách.
 
+### 6.4 Case study thực chiến: Thi một mình (Solo) vs Thi cộng đồng (Community Exam & Leaderboard)
+
+Từ các lỗi thực tế khi vận hành module bài thi trên LearnHub/QuestionHub, có 4 điểm bắt buộc kiểm tra khi review code:
+
+1. **Chống client tự chấm điểm & lỗi `Boolean(selectedAnswerId)`:**
+   - Lỗi kinh điển: endpoint `POST /exams/:id/submit` nhận `score` từ `req.body`, hoặc kiểm tra đáp án bằng `Boolean(answers[questionId])` khiến mọi câu có chọn đáp án (ví dụ `answer_id = 102`) đều bị đánh thành `is_correct = true`!
+   - **Cách đúng:** Trong cùng 1 Transaction `BEGIN ... COMMIT`, backend truy vấn `Question_Exams` + `Answer_Option (IsCorrect = TRUE)` để tự đối chiếu `selected_answer_id`, tự tính `finalScore`, và lưu **cả `selected_answer_id` lẫn `is_correct`** vào `exam_attempt_questions`.
+2. **Lỗi Cartesian Fan-out khi `JOIN Subject`:**
+   - Viết `LEFT JOIN Subject s ON s.GradeId = g.GradeId` sẽ làm **1 đề thi bị nhân bản** thành nhiều dòng theo tất cả môn học của khối lớp đó; hoặc lấy `e.ChapterId = s.SubjectId` là sai khóa ngoại.
+   - **Cách đúng:** Join đúng chuỗi khóa ngoại `Exam -> Chapter (e.ChapterId = c.ChapterId) -> Subject (c.SubjectId = s.SubjectId)`.
+3. **Chống Double-Submit & Farm thưởng:**
+   - Chặn nộp trùng trong cửa sổ 10 giây (`completed_at > NOW() - INTERVAL '10 seconds'`) kết hợp chuyển trạng thái nguyên tử `WHERE attempt_id = $1 AND user_id = $2 AND status = 'IN_PROGRESS'`.
+   - Nếu có thưởng điểm/nước khi hoàn thành đề thi, chỉ thưởng ở **lần hoàn thành đầu tiên trong ngày** cho đề đó.
+4. **Bảng xếp hạng Thi cộng đồng (`Leaderboard`) & Zero Hard Delete:**
+   - **Không lưu cứng cột `rank`** trong bảng (gây *Lost Update* & nghẽn khóa khi hàng trăm thí sinh cùng nộp phút cuối). Tính động bằng Window Function kết hợp Partial Composite Index `(exam_id, score DESC, completed_at ASC) WHERE status = 'COMPLETED'`:
+     ```sql
+     WITH best_attempts AS (
+       SELECT ea.user_id,
+              MAX(ea.score) AS best_score,
+              MIN(EXTRACT(EPOCH FROM (ea.completed_at - ea.started_at)))::int AS best_duration_seconds
+       FROM exam_attempts ea
+       WHERE ea.exam_id = $1 AND ea.status = 'COMPLETED'
+       GROUP BY ea.user_id
+     )
+     SELECT RANK() OVER (ORDER BY best_score DESC, best_duration_seconds ASC) AS rank, *
+     FROM best_attempts
+     ORDER BY rank ASC
+     LIMIT $2;
+     ```
+   - **Zero Hard Delete:** Khi chủ đề thi bấm xóa đề cộng đồng, chỉ ẩn bằng `UPDATE Exam SET ExamSource = 'HIDDEN' WHERE ExamId = $1 AND CreatedByUserId = $2`. Tương tự khi học sinh bấm "Làm lại bài tập" (Reset), bọc Transaction chuyển phiên cũ sang `status = 'ARCHIVED'` và tạo phiên mới `IN_PROGRESS` — vừa giữ trọn lịch sử tổng (`user-history`), vừa không gây deadlock xóa cascade.
+
 ## 7. Công bố kết quả và phúc khảo
 
 - `result_release`: `immediate` (chỉ khi toàn bộ chấm tự động), `after_close`, `manual` (giáo viên bấm công bố). API xem điểm phải kiểm tra điều kiện này — lỗi hay gặp: endpoint chi tiết bài làm trả điểm/đáp án trước khi công bố.

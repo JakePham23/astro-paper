@@ -402,6 +402,59 @@ Tải bình luận gốc theo trang (cursor), mỗi gốc kèm 2–3 trả lời
 | Ảnh vẫn truy cập được sau khi xóa bài | Lộ nội dung | Xóa object + purge CDN |
 | Tiêu đề toàn emoji/ký tự đặc biệt | Slug rỗng | Fallback slug = id rút gọn |
 
+### 12.1 Case study thực chiến: Race condition khi Like/Save, chống spam Dwell Time & Zero Hard Delete
+
+#### 1. Lệch đếm `likes_count` / `saves_count` do Check-then-Act Race Condition
+Nếu code viết theo kiểu: `SELECT` kiểm tra $\rightarrow$ `INSERT ... ON CONFLICT DO NOTHING` $\rightarrow$ luôn chạy `UPDATE blogs SET likes_count = likes_count + 1`, thì khi user double-click nút Like ($T_1$ và $T_2$ chạy song song), cả 2 đều thấy chưa có dòng like trong bảng `blog_likes`, một bên `INSERT` thành công, bên kia bị `ON CONFLICT DO NOTHING` (0 dòng) **nhưng vẫn chạy `+ 1`** $\rightarrow$ lệch số like!
+
+**Cách xử lý chuẩn PostgreSQL (Transaction + kiểm tra `rowCount > 0`, không cần khóa bảng):**
+
+```ts
+async function toggleLike(userId: number, blogId: number) {
+  return db.tx(async (t) => {
+    const delRes = await t.result(
+      'DELETE FROM blog_likes WHERE user_id = $1 AND blog_id = $2',
+      [userId, blogId]
+    );
+
+    let isLiked = false;
+    if (delRes.rowCount > 0) {
+      await t.none(
+        'UPDATE blogs SET likes_count = GREATEST(likes_count - 1, 0) WHERE blog_id = $1',
+        [blogId]
+      );
+    } else {
+      const insRes = await t.result(
+        'INSERT INTO blog_likes (user_id, blog_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [userId, blogId]
+      );
+      if (insRes.rowCount > 0) {
+        await t.none(
+          'UPDATE blogs SET likes_count = likes_count + 1 WHERE blog_id = $1',
+          [blogId]
+        );
+      }
+      isLiked = true;
+    }
+
+    const row = await t.one('SELECT likes_count FROM blogs WHERE blog_id = $1', [blogId]);
+    return { isLiked, likesCount: row.likes_count };
+  });
+}
+```
+
+#### 2. Chống spam `dwellSeconds` và farm thưởng đọc bài
+- Luôn giới hạn trần ở server: `safeDwell = Math.min(Math.max(parseInt(dwellSeconds, 10) || 0, 0), 600)` (không tin số `999999` từ client).
+- Nếu có thưởng điểm/nước thú cưng khi đọc chất lượng (`dwell >= 30s` hoặc `scroll >= 70%`), kiểm tra đã thưởng trong ngày chưa (`WHERE user_id = $1 AND blog_id = $2 AND is_quality_read = TRUE AND created_at >= CURRENT_DATE`).
+
+#### 3. Zero Hard Delete (Chỉ ẩn, không xóa vật lý)
+- Thay vì `DELETE FROM blogs` (dễ gây **Deadlock** do `ON DELETE CASCADE` khóa hàng nghìn dòng ở `blog_likes`, `blog_comments`, `blog_reads` khi người khác đang tương tác), luôn dùng **Soft Delete** kiểm tra quyền sở hữu ngay trong câu `UPDATE`:
+  ```sql
+  UPDATE blogs SET status = 'deleted', updated_at = NOW()
+  WHERE blog_id = $1 AND user_id = $2 AND status != 'deleted'
+  RETURNING blog_id;
+  ```
+
 ## 13. Lỗi agent AI hay mắc trong module này
 
 1. Chỉ kiểm tra "đã đăng nhập", không kiểm tra **chủ sở hữu** → IDOR.

@@ -26,6 +26,17 @@ PostgreSQL chỉ thực sự có **3** mức (`READ UNCOMMITTED` được xử l
 
 Điểm đặc thù của PostgreSQL ở Read Committed: khi `UPDATE` gặp dòng vừa bị transaction khác sửa và commit, nó **đánh giá lại điều kiện WHERE trên phiên bản mới** rồi cập nhật. Vì vậy `UPDATE … SET x = x + 1` là an toàn; nhưng "đọc ở ứng dụng rồi ghi lại" thì không.
 
+### 1.1 Phân biệt lý thuyết Strict 2PL (sách DBMS) vs Thực tế PostgreSQL (MVCC)
+
+| Thao tác | Lý thuyết **Strict 2PL** (Sách DBMS) | Thực tế **PostgreSQL (MVCC)** |
+| :--- | :--- | :--- |
+| **`READ` (`SELECT`)** | Lấy Shared Lock ($S$) $\rightarrow$ chặn `WRITE` khác | **Không khóa** $\rightarrow$ đọc snapshot cũ, không chặn `WRITE` |
+| **`WRITE` (`UPDATE`/`DELETE`)** | Lấy Exclusive Lock ($X$) $\rightarrow$ chặn **cả `READ` và `WRITE`** | Khóa mức dòng $\rightarrow$ chỉ chặn **`WRITE` khác** trên cùng dòng |
+| **Khi nào nhả khóa?** | Giữ khóa $X$ cho tới **`COMMIT` / `ROLLBACK`** | Giữ row-lock cho tới **`COMMIT` / `ROLLBACK`** |
+
+- **Không bao giờ mở khóa `WRITE` trước khi `COMMIT`:** Nếu `WRITE` xong rồi nhả khóa trước khi `COMMIT` để `READ` đọc vào, giao tác sau `ROLLBACK` sẽ gây ra **Dirty Read**.
+- **Thời gian xem trang $\neq$ Thời gian Transaction:** Khi user mở bài viết/bài thi để đọc trong 30 phút, DB chỉ `SELECT` trong **~2–5ms** rồi đóng kết nối, **không** khóa bài viết đó suốt 30 phút. Khóa DB chỉ tồn tại vài mili-giây lúc user bấm Like/Submit!
+
 ## 2. Demo bất thường
 
 ### Lost update (mất cập nhật) – Read Committed
@@ -78,6 +89,12 @@ async function withSerializableRetry<T>(fn: (tx: Tx) => Promise<T>, maxAttempts 
 ```
 
 Quy tắc: **toàn bộ transaction** phải chạy lại (đọc lại dữ liệu), không chỉ câu lệnh lỗi. Không gửi email/gọi API bên ngoài *bên trong* hàm được retry.
+
+### 2.1 Chọn chiến lược cho từng nghiệp vụ thực tế
+
+- **Cập nhật phụ thuộc nhiều cột trạng thái** (ví dụ cho thú cưng ăn: kiểm tra `food >= 1`, trừ `food -= 1`, cộng `exp += 25`, nếu `exp >= ngưỡng` thì `level += 1`): Dùng `SELECT ... FROM dinosaur_pets WHERE pet_id = $1 FOR UPDATE` trong Transaction để 5 cú click liên tiếp lúc `food = 1` không thể cộng `+125 EXP`.
+- **Bộ đếm Like / Save:** Không cần `FOR UPDATE` (tránh nghẽn khóa); dùng `DELETE` / `INSERT ... ON CONFLICT DO NOTHING` và kiểm tra **`rowCount > 0`** trước khi cộng/trừ counter trong Transaction.
+- **Xóa dữ liệu:** Dùng **Soft Delete** (`UPDATE ... SET status = 'deleted'`) thay vì `DELETE` + `ON DELETE CASCADE` để tránh khóa hàng nghìn dòng con gây Deadlock.
 
 ## 3. Lock mức dòng
 
@@ -285,6 +302,19 @@ Ba lớp bảo vệ: khóa dòng, điều kiện trạng thái trong `UPDATE`, r
 | Khóa nhiều dòng không theo thứ tự | Deadlock lặp lại |
 | `pg_advisory_lock` mức session qua PgBouncer transaction mode | Khóa không bao giờ nhả |
 | Dùng `pg_terminate_backend` như cách xử lý thường xuyên | Che giấu lỗi thiết kế |
+
+## 12. Thuật ngữ DBMS Anh–Việt (Glossary)
+
+| Thuật ngữ (English) | Tiếng Việt | Ý nghĩa cốt lõi |
+| :--- | :--- | :--- |
+| **Transaction ($T$) / Schedule ($S$)** | Giao tác / Lịch giao tác | Đơn vị công việc ACID; thứ tự chạy xen kẽ của nhiều giao tác. |
+| **Conflict Serializability** | Khả tuần tự xung đột | Đổi chỗ các thao tác không xung đột để tương đương lịch tuần tự (Precedence Graph không chu trình). |
+| **Two-Phase Locking (2PL)** | Khóa hai pha | Pha xin khóa (Growing) tách biệt pha nhả khóa (Shrinking). |
+| **MVCC / SSI** | Đa phiên bản / Cô lập ảnh chụp khả tuần tự | Lưu snapshot theo `xmin`/`xmax` giúp đọc-ghi không chặn nhau. |
+| **Deadlock / Wait-For Graph** | Khóa chết / Đồ thị chờ | Chờ vòng tròn giữa các giao tác; PG phát hiện chu trình và hủy 1 Victim (`40P01`). |
+| **Dirty / Non-Repeatable / Phantom Read** | Đọc bẩn / Không lặp lại / Bóng ma | 3 bất thường đọc do mức cô lập thấp. |
+| **Lost Update / Write Skew** | Mất cập nhật / Lệch ghi | 2 bất thường ghi khi thiếu Atomic SQL, `FOR UPDATE`, hoặc `SERIALIZABLE`. |
+| **Idempotency** | Tính lũy đẳng | Gọi lặp lại 1 request nhiều lần vẫn chỉ tạo đúng 1 kết quả (vd: nộp bài thi 1 lần). |
 
 ## Checklist review
 

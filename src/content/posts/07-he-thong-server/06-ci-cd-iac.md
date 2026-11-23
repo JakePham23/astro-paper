@@ -133,6 +133,30 @@ jobs:
 - PR từ fork không được nhận bí mật.
 - `environment: production` + required reviewers = cổng phê duyệt của người.
 
+### 3.1 Phương án gọn nhẹ: CI/CD tự host trên máy cá nhân / Home Server (Không mở port Router)
+
+Với dự án cá nhân hoặc team nhỏ tự host trên Mac / Mini PC ở nhà (thường bị IP động / CGNAT và không nên mở Port Forwarding trên modem để tránh lộ IP nhà riêng), có thể dùng bộ 3 miễn phí: **PM2 Cluster + Cloudflare Tunnel (`cloudflared`) + GitHub Self-Hosted Runner**:
+
+```text
+[git push origin main] ──► [GitHub Repo]
+                                 ▲
+     (Máy cá nhân chủ động kết nối ra ngoài qua HTTPS - KHÔNG mở port!)
+┌────────────────────────────────┴──────────────────────────────────┐
+│ MÁY CÁ NHÂN (Mac / Ubuntu / Mini PC)                              │
+│  [GitHub Self-Hosted Runner]                                      │
+│    ├─► npm ci --omit=dev                                          │
+│    ├─► psql "$DB_URL" -f script/create_recommended_indexes.sql    │
+│    └─► pm2 reload ecosystem.config.cjs (0s downtime)              │
+│          │                                                        │
+│          ▼                                                        │
+│  [Node.js :3001] ◄─── [Cloudflare Tunnel (cloudflared)] ──► HTTPS │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+- **PM2 Cluster (`ecosystem.config.cjs`):** `instances: 2, exec_mode: 'cluster'` để `pm2 reload` khởi động lại từng process mà không rớt request đang chạy.
+- **Cloudflare Tunnel (`cloudflared`):** `cloudflared tunnel run --url http://localhost:3001 <tunnel-name>` đưa API ra domain HTTPS mà không mở port router.
+- **Workflow (`.github/workflows/deploy-self-hosted.yml`):** Dùng `runs-on: self-hosted` để tự kéo code, chạy migration idempotent (`IF NOT EXISTS`) và `pm2 reload` ngay khi push lên `main`.
+
 ## 4. Artifact bất biến và promotion
 
 ```

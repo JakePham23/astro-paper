@@ -17,6 +17,7 @@ tags:
 
 | # | File | Nội dung chính |
 |---|---|---|
+| 00 | [00-request-lifecycle-tu-trinh-duyet-den-db.md](00-request-lifecycle-tu-trinh-duyet-den-db.md) | Vòng đời đầy đủ một Request (DNS → TLS → LB → Middleware/Controller/Service → Cache/Pool → PostgreSQL) kèm ngân sách độ trễ |
 | 01 | [01-authentication.md](01-authentication.md) | Lưu mật khẩu, đăng nhập, chống brute-force, MFA/passkey, OAuth2/OIDC, SSO, xác thực giữa service |
 | 02 | [02-session-token.md](02-session-token.md) | Session vs JWT, cookie, CSRF, access/refresh token, xoay vòng, thu hồi, logout mọi thiết bị |
 | 03 | [03-phan-quyen.md](03-phan-quyen.md) | RBAC/ABAC/ReBAC, IDOR, multi-tenant, row-level security, ma trận quyền LearnHub |
@@ -33,6 +34,7 @@ tags:
 
 ## Lộ trình đọc gợi ý
 
+0. **Bức tranh tổng thể đường đi request:** 00
 1. **Nền tảng bảo mật người dùng:** 01 → 02 → 03 → 04
 2. **Nghiệp vụ nội dung:** 05 → 06
 3. **Dữ liệu và giao tiếp:** 07 → 08

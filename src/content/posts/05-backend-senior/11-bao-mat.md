@@ -258,6 +258,23 @@ const logger = pino({
 });
 ```
 
+### 11.1 Chống lộ API Backend, IP thật của Server & Cấu trúc thư mục dự án
+
+Ngoài chống SQL Injection và DDoS, cần khóa **4 lỗ hổng cấu hình** hay làm lộ hạ tầng và cây thư mục code:
+
+1. **Ẩn IP Origin & Cổng nội bộ (`3001`, `5432`):**
+   - Đặt **Cloudflare (Proxy DNS + WAF)** phía trước $\rightarrow$ **Nginx Reverse Proxy** (`proxy_pass http://127.0.0.1:3001`). Trên Firewall (UFW/Security Group), **đóng hoàn toàn port `3001` và `5432` với Internet**, chỉ mở port `443` cho dải IP Cloudflare.
+   - Dùng **Next.js `rewrites()`** làm BFF Proxy để trình duyệt chỉ gọi cùng domain `/api/...`, không lộ domain/port backend trong F12 Network.
+2. **Không trả `error.stack` về Client:** `error.stack` của Node.js chứa đường dẫn tuyệt đối trên ổ cứng (vd `/home/ubuntu/app/src/services/auth.service.js:42`). Chỉ log `error` ở nội bộ, trả về `{ status: 'error', message: 'Internal server error.' }`.
+3. **Tắt Source Maps trên Production của Frontend:** Giữ `productionBrowserSourceMaps: false` trong `next.config.ts` để F12 $\rightarrow$ Sources không thấy nguyên cây thư mục `src/` và code TypeScript gốc.
+4. **Khoanh vùng `express.static`, ẩn chữ ký & CORS chặt:**
+   - Chỉ phục vụ đúng thư mục ảnh công khai với `{ dotfiles: 'deny', index: false }` (chặn đọc `.env`, `.git`, `.DS_Store`); dùng `path.basename(filename)` chống Path Traversal (`../../.env`); xóa `.DS_Store` khỏi git.
+   - Gọi `app.disable('x-powered-by')` + `helmet()`. Cẩn thận lỗi CORS viết fallback `return callback(null, true)` bên ngoài `if (allowedOrigins.includes(origin))` — phải trả `callback(new Error('Not allowed by CORS'))`.
+5. **Khóa quyền `DELETE` ngay tại DB (Zero Hard Delete):** Tạo role riêng cho ứng dụng và thu hồi quyền xóa vật lý trên các bảng cốt lõi:
+   ```sql
+   REVOKE DELETE, TRUNCATE ON Users, Exam, exam_attempts, blogs, lesson_practice_sessions FROM app_user;
+   ```
+
 ---
 
 ## 12. Threat modeling nhanh (STRIDE) cho LearnHub
