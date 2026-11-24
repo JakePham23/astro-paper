@@ -91,6 +91,14 @@ export interface UIStrings {
     label: string;
     switchTo: string;
   };
+  modes: {
+    label: string;
+    watch: string;
+    index: string;
+    indexHeading: string;
+    homeIndexHeading: string;
+    scrollCue: string;
+  };
   a11y: {
     skipToContent: string;
     /** Optional until v8, so older locale files still type-check. */

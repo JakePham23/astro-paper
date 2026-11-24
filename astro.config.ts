@@ -16,6 +16,7 @@ import {
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import { rehypeTableWrapper } from "./src/utils/rehypeTableWrapper";
+import { rehypeMarkdownPrefixes } from "./src/utils/rehypeMarkdownPrefixes";
 import {
   inlineTocDeprecation,
   rehypeInlineToc,
@@ -49,6 +50,7 @@ export default defineConfig({
         rehypeInlineToc,
         rehypeCallouts,
         rehypeTableWrapper,
+        rehypeMarkdownPrefixes,
       ],
     }),
     shikiConfig: {

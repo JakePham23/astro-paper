@@ -17,6 +17,8 @@ import AdjacentPostNav from "@/pages/posts/[...slug]/_components/AdjacentPostNav
 import PostSidebar from "@/pages/posts/[...slug]/_components/PostSidebar.astro";
 import PostToc from "@/pages/posts/[...slug]/_components/PostToc.astro";
 import PostEnd from "@/custom/PostEnd.astro";
+import { splitTrailingPunct } from "@/utils/splitTrailingPunct";
+import { useTranslations } from "@/i18n";
 import config from "@/config";
 
 export type AdjacentPost = {
@@ -34,11 +36,15 @@ type Props = {
 const { post, prevPost, nextPost } = Astro.props;
 const locale = normalizeLocale(Astro.currentLocale ?? config.site.lang);
 const otherLocale = locale === "vi" ? "en" : "vi";
-const alternateUrl = (await getAlternatePostUrl(post, otherLocale)) ?? undefined;
+const t = useTranslations(locale);
+const alternateUrl =
+  (await getAlternatePostUrl(post, otherLocale)) ?? undefined;
 
 const {
   title,
   description,
+  tagline,
+  lead,
   ogImage: initOgImage,
   canonicalURL,
   pubDatetime,
@@ -51,6 +57,10 @@ const {
 
 const { Content, headings } = await render(post);
 const tocHeadings = config.features.toc && !hideToc ? headings : [];
+const h2Headings = headings.filter(h => h.depth === 2);
+const leadLines = Array.isArray(lead)
+  ? lead.map(line => splitTrailingPunct(line))
+  : [];
 
 let ogImageUrl: string | undefined;
 
@@ -88,6 +98,8 @@ const ogImage = ogImageUrl
 
   <main
     id="main-content"
+    data-mode-root
+    data-view-mode="watch"
     class:list={["app-layout", { "mt-8": !config.features.showBackButton }]}
     data-pagefind-body
   >
@@ -95,37 +107,109 @@ const ogImage = ogImageUrl
       style={{ viewTransitionName: toTransitionName(post.id) }}
       class="text-accent inline-block text-2xl leading-tight font-bold tracking-tight sm:text-3xl"
     >
-      {title}
+      <span class="md-prefix" aria-hidden="true"># </span>{title}
     </h1>
 
-    <div class="my-2 flex items-center gap-2">
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-      <span
-        aria-hidden="true"
-        class:list={[
-          "text-muted-foreground max-sm:hidden",
-          { hidden: !config.features.editPost?.enabled || hideEditPost },
-        ]}
-      >
-        |
-      </span>
-      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+    {
+      tagline && (
+        <p class="text-muted-foreground mt-1.5 text-sm leading-relaxed sm:text-base">
+          {tagline}
+        </p>
+      )
+    }
+
+    <div class="my-2 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+        <span
+          aria-hidden="true"
+          class:list={[
+            "text-muted-foreground max-sm:hidden",
+            { hidden: !config.features.editPost?.enabled || hideEditPost },
+          ]}
+        >
+          |
+        </span>
+        <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+      </div>
+      {
+        h2Headings.length >= 2 && (
+          <nav class="modes" data-modes aria-label={t.modes.label}>
+            <button type="button" data-mode="watch" aria-pressed="true">
+              {t.modes.watch}
+            </button>
+            <button type="button" data-mode="index" aria-pressed="false">
+              {t.modes.index}
+            </button>
+          </nav>
+        )
+      }
     </div>
 
-    <div class="post-body relative mt-5 sm:mt-8">
-      <PostSidebar currentId={post.id} currentFilePath={post.filePath} />
-      <PostToc headings={tocHeadings} />
-      <article
-        id="article"
-        class:list={[
-          "w-full",
-          "app-prose max-w-app",
-          "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
-        ]}
-      >
-        <Content />
-      </article>
+    {
+      leadLines.length > 0 && (
+        <section class="hero post-hero hero-lines" aria-hidden="true">
+          {leadLines.map((line, idx) => (
+            <p
+              data-reveal="line"
+              data-reveal-upright={
+                idx === leadLines.length - 1 ? "true" : undefined
+              }
+            >
+              {line.body}
+              {line.punct && <em class="punct">{line.punct}</em>}
+              {idx === leadLines.length - 1 && (
+                <span class="hero-cursor" aria-hidden="true">
+                  _
+                </span>
+              )}
+            </p>
+          ))}
+        </section>
+      )
+    }
+
+    <div data-watch-panel>
+      <div class="post-body relative mt-5 sm:mt-8">
+        <PostSidebar currentId={post.id} currentFilePath={post.filePath} />
+        <PostToc headings={tocHeadings} />
+        <article
+          id="article"
+          class:list={[
+            "w-full",
+            "app-prose max-w-app",
+            "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
+          ]}
+        >
+          <Content />
+        </article>
+      </div>
     </div>
+
+    {
+      h2Headings.length >= 2 && (
+        <section class="post-index-view" data-index-panel>
+          <h2 class="index-heading">
+            <span class="md-prefix" aria-hidden="true">
+              ##{" "}
+            </span>
+            {t.modes.indexHeading}
+          </h2>
+          <ul class="index-list">
+            {h2Headings.map(heading => (
+              <li class="index-row">
+                <span class="md-prefix" aria-hidden="true">
+                  ##
+                </span>
+                <a href={`#${heading.slug}`} class="index-link">
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
 
     <hr class="my-8 border-dashed" />
 
@@ -158,38 +242,6 @@ const ogImage = ogImageUrl
 </PostLayout>
 
 <script is:inline data-astro-rerun>
-  function createProgressBar() {
-    const progressContainer = document.createElement("div");
-    progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
-
-    const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar h-1 w-0 bg-accent";
-    progressBar.id = "myBar";
-
-    progressContainer.appendChild(progressBar);
-    document.body.appendChild(progressContainer);
-  }
-  createProgressBar();
-
-  function updateScrollProgress() {
-    document.addEventListener("scroll", () => {
-      const winScroll =
-        document.body.scrollTop || document.documentElement.scrollTop;
-      const height =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      if (document) {
-        const myBar = document.getElementById("myBar");
-        if (myBar) {
-          myBar.style.width = scrolled + "%";
-        }
-      }
-    });
-  }
-  updateScrollProgress();
-
   function addHeadingLinks() {
     const headings = Array.from(
       document.querySelectorAll("#article :is(h2, h3, h4, h5, h6)")

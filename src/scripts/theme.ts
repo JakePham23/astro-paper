@@ -3,6 +3,17 @@ const PALETTE_KEY = "palette";
 const LIGHT = "light";
 const DARK = "dark";
 const DEFAULT_PALETTE = "coastal";
+const VALID_PALETTES = new Set([
+  "coastal",
+  "citrus",
+  "forest",
+  "alpine",
+  "human",
+]);
+
+function normalizePalette(value: string | null | undefined): string {
+  return value && VALID_PALETTES.has(value) ? value : DEFAULT_PALETTE;
+}
 
 function getPreferredTheme(): string {
   const stored = localStorage.getItem(THEME_KEY);
@@ -13,7 +24,7 @@ function getPreferredTheme(): string {
 }
 
 function getPreferredPalette(): string {
-  return localStorage.getItem(PALETTE_KEY) ?? DEFAULT_PALETTE;
+  return normalizePalette(localStorage.getItem(PALETTE_KEY));
 }
 
 // Reuse the value already set by the inline FOUC-prevention script if available.
@@ -21,8 +32,9 @@ const initialWin = window as unknown as {
   __theme?: { value: string; palette?: string };
 };
 let themeValue: string = initialWin.__theme?.value ?? getPreferredTheme();
-let paletteValue: string =
-  initialWin.__theme?.palette ?? getPreferredPalette();
+let paletteValue: string = normalizePalette(
+  initialWin.__theme?.palette ?? getPreferredPalette()
+);
 
 function persist(): void {
   localStorage.setItem(THEME_KEY, themeValue);
@@ -66,8 +78,7 @@ function setup(): void {
     .querySelectorAll<HTMLButtonElement>("[data-palette-btn]")
     .forEach(btn => {
       btn.addEventListener("click", () => {
-        const next = btn.dataset.paletteBtn;
-        if (!next) return;
+        const next = normalizePalette(btn.dataset.paletteBtn);
         paletteValue = next;
         persist();
       });
@@ -79,9 +90,15 @@ setup();
 // Re-run after View Transitions navigation.
 document.addEventListener("astro:after-swap", setup);
 
-// Carry the theme-color value across View Transitions to prevent the
-// Android navigation bar from flashing during page transitions.
+// Carry theme, palette, and theme-color across View Transitions to prevent flashes.
 document.addEventListener("astro:before-swap", event => {
+  const newRoot = (event as { newDocument: Document }).newDocument
+    .documentElement;
+  newRoot.setAttribute("data-theme", themeValue);
+  newRoot.setAttribute("data-palette", paletteValue);
+  newRoot.classList.toggle("dark", themeValue === DARK);
+  newRoot.classList.add("js");
+
   const color = document
     .querySelector("meta[name='theme-color']")
     ?.getAttribute("content");

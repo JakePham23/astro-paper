@@ -9,6 +9,8 @@ import Socials from "@/components/Socials.astro";
 import Card from "@/components/Card.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { splitTrailingPunct } from "@/utils/splitTrailingPunct";
 import { getPostsByLocale, normalizeLocale } from "@/utils/i18nPosts";
 import { getAssetPath } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
@@ -26,6 +28,8 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 const homePath = getRelativeLocaleUrl(locale, "");
 const rssUrl =
   locale === "en" ? getAssetPath("en/rss.xml") : getAssetPath("rss.xml");
+const heroIntroParts = splitTrailingPunct(t.home.heroIntro);
+const heroSubParts = splitTrailingPunct(t.home.heroSub);
 ---
 
 <Layout>
@@ -34,13 +38,15 @@ const rssUrl =
     id="main-content"
     data-layout="index"
     data-home-path={homePath}
+    data-mode-root
+    data-view-mode="watch"
     class="app-layout my-1"
   >
     <section id="hero" class="border-border border-b pt-5 pb-6 sm:pt-8">
       <h1
         class="my-3 inline-block text-3xl font-bold tracking-tight sm:my-6 sm:text-5xl"
       >
-        {t.home.heroTitle}
+        <span class="md-prefix" aria-hidden="true"># </span>{t.home.heroTitle}
       </h1>{" "}
       <a
         target="_blank"
@@ -57,66 +63,131 @@ const rssUrl =
         <span class="sr-only">RSS Feed</span>
       </a>
 
-      <p class="text-[15px] leading-relaxed sm:text-base">
-        {t.home.heroIntro}
-      </p>
-      <p class="mt-2 text-[15px] leading-relaxed sm:text-base">
-        {t.home.heroSub}{" "}
-        <LinkButton
-          class="hover:text-accent underline decoration-dashed underline-offset-4"
-          href={getRelativeLocaleUrl(locale, "topics")}
+      <div class="hero-lines">
+        <p data-reveal="line" class="text-[15px] leading-relaxed sm:text-base">
+          {heroIntroParts.body}
+          {
+            heroIntroParts.punct && (
+              <em class="punct">{heroIntroParts.punct}</em>
+            )
+          }
+        </p>
+        <p
+          data-reveal="line"
+          data-reveal-upright="true"
+          class="text-[15px] leading-relaxed sm:text-base"
         >
-          {t.home.browseTopics}
-        </LinkButton>
-        .
-      </p>
-      {
-        socials.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">
-              {t.home.socialLinks}:
+          {heroSubParts.body}{" "}
+          <LinkButton
+            class="hover:text-accent underline decoration-dashed underline-offset-4"
+            href={getRelativeLocaleUrl(locale, "topics")}
+          >
+            {t.home.browseTopics}
+          </LinkButton>
+          {heroSubParts.punct && <em class="punct">{heroSubParts.punct}</em>}
+          <span class="hero-cursor" aria-hidden="true">_</span>
+        </p>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        {
+          socials.length > 0 && (
+            <div class="flex max-sm:flex-col sm:items-center">
+              <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">
+                {t.home.socialLinks}:
+              </div>
+              <Socials />
             </div>
-            <Socials />
-          </div>
-        )
-      }
+          )
+        }
+        <div class="flex items-center gap-3">
+          <span class="scroll-cue" data-scroll-cue aria-hidden="true">
+            {t.modes.scrollCue}
+          </span>
+          <nav class="modes" data-modes aria-label={t.modes.label}>
+            <button type="button" data-mode="watch" aria-pressed="true">
+              {t.modes.watch}
+            </button>
+            <button type="button" data-mode="index" aria-pressed="false">
+              {t.modes.index}
+            </button>
+          </nav>
+        </div>
+      </div>
     </section>
 
-    {
-      featuredPosts.length > 0 && (
-        <section
-          id="featured"
-          class:list={[
-            "pt-8 pb-6 sm:pt-12",
-            { "border-border border-b": recentPosts.length > 0 },
-          ]}
-        >
-          <h2 class="mb-4 text-lg font-bold tracking-tight sm:mb-5 sm:text-xl">
-            {t.home.featured}
-          </h2>
-          <ul class="grid gap-4">
-            {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+    <div data-watch-panel>
+      {
+        featuredPosts.length > 0 && (
+          <section
+            id="featured"
+            class:list={[
+              "pt-8 pb-6 sm:pt-12",
+              { "border-border border-b": recentPosts.length > 0 },
+            ]}
+          >
+            <h2 class="mb-4 text-lg font-bold tracking-tight sm:mb-5 sm:text-xl">
+              <span class="md-prefix" aria-hidden="true">
+                ##{" "}
+              </span>
+              {t.home.featured}
+            </h2>
+            <ul class="grid gap-4">
+              {featuredPosts.map(data => (
+                <Card variant="h3" {...data} />
+              ))}
+            </ul>
+          </section>
+        )
+      }
 
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-8 pb-6 sm:pt-12">
-          <h2 class="mb-4 text-lg font-bold tracking-tight sm:mb-5 sm:text-xl">
-            {t.home.recentPosts}
-          </h2>
-          <ul class="grid gap-4">
-            {recentPosts.slice(0, postsConfig.perIndex).map(data => (
-              <Card variant="h3" {...data} />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+      {
+        recentPosts.length > 0 && (
+          <section id="recent-posts" class="pt-8 pb-6 sm:pt-12">
+            <h2 class="mb-4 text-lg font-bold tracking-tight sm:mb-5 sm:text-xl">
+              <span class="md-prefix" aria-hidden="true">
+                ##{" "}
+              </span>
+              {t.home.recentPosts}
+            </h2>
+            <ul class="grid gap-4">
+              {recentPosts.slice(0, postsConfig.perIndex).map(data => (
+                <Card variant="h3" {...data} />
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </div>
+
+    <section class="home-index-view" data-index-panel>
+      <h2 class="index-heading">
+        <span class="md-prefix" aria-hidden="true">## </span>
+        {t.modes.homeIndexHeading} ({sortedPosts.length})
+      </h2>
+      <ul class="index-list">
+        {
+          sortedPosts.map(post => (
+            <li class="index-row">
+              <span class="index-date">
+                {post.data.pubDatetime.toISOString().slice(0, 10)}
+              </span>
+              <span class="md-prefix" aria-hidden="true">
+                ##
+              </span>
+              <a
+                href={getPostUrl(post.id, post.filePath, locale)}
+                class="index-link"
+              >
+                {post.data.title}
+              </a>
+              {post.data.tags?.[0] && (
+                <span class="index-tag">#{post.data.tags[0]}</span>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
 
     <div class="my-8 text-center">
       <LinkButton href={getRelativeLocaleUrl(locale, "posts")}>

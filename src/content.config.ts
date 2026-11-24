@@ -18,6 +18,8 @@ const posts = defineCollection({
       tags: z.array(z.string()).default(["others"]),
       ogImage: image().or(z.string()).optional(),
       description: z.string(),
+      tagline: z.string().optional(),
+      lead: z.array(z.string()).optional(),
       canonicalURL: z.string().optional(),
       hideEditPost: z.boolean().optional(),
       hideToc: z.boolean().optional(),

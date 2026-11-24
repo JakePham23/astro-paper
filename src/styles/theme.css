@@ -1,3 +1,5 @@
+@import "./tokens.css";
+
 /* Register design tokens for Tailwind v4 */
 @theme inline {
   --color-background: var(--background);
@@ -7,93 +9,21 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
-  --font-app: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+  --color-bg-raise: var(--bg-raise);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-coral: var(--accent-coral);
+  --color-accent-sage: var(--accent-sage);
+  --color-c-amber: var(--c-amber);
+  --color-c-coral: var(--c-coral);
+  --color-c-pink: var(--c-pink);
+  --color-c-lilac: var(--c-lilac);
+  --color-c-sky: var(--c-sky);
+  --color-c-teal: var(--c-teal);
+  --color-c-sage: var(--c-sage);
+  --color-c-lime: var(--c-lime);
+  --color-rule: var(--rule);
+  --font-app:
+    var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-google-sans-code), ui-monospace, monospace;
-}
-
-/* 1. Coastal Cream & Navy (default) */
-:root,
-[data-theme="light"],
-[data-theme="light"][data-palette="coastal"] {
-  --background: #fbf7ee;
-  --foreground: #0b2239;
-  --accent: #0e6380;
-  --accent-foreground: #ffffff;
-  --muted: #e9e4d6;
-  --muted-foreground: #475d73;
-  --border: #ddd6c4;
-}
-
-[data-theme="dark"],
-[data-theme="dark"][data-palette="coastal"] {
-  --background: #0b1929;
-  --foreground: #edf4fa;
-  --accent: #67c4e6;
-  --accent-foreground: #0b1929;
-  --muted: #142a42;
-  --muted-foreground: #9fb5ca;
-  --border: #1e3a58;
-}
-
-/* 2. Citrus Gallery */
-[data-theme="light"][data-palette="citrus"] {
-  --background: #fcf8ee;
-  --foreground: #2b2444;
-  --accent: #a84b08;
-  --accent-foreground: #ffffff;
-  --muted: #f2ead8;
-  --muted-foreground: #665c7a;
-  --border: #e5dac3;
-}
-
-[data-theme="dark"][data-palette="citrus"] {
-  --background: #1b172b;
-  --foreground: #f6f1e7;
-  --accent: #fbbf24;
-  --accent-foreground: #1b172b;
-  --muted: #292340;
-  --muted-foreground: #b4acc9;
-  --border: #3a3159;
-}
-
-/* 3. Forest Sage */
-[data-theme="light"][data-palette="forest"] {
-  --background: #f7faf4;
-  --foreground: #13251a;
-  --accent: #14532d;
-  --accent-foreground: #ffffff;
-  --muted: #e3ece0;
-  --muted-foreground: #4a5f51;
-  --border: #d0decb;
-}
-
-[data-theme="dark"][data-palette="forest"] {
-  --background: #0f1c15;
-  --foreground: #eaf3ea;
-  --accent: #6ee7a0;
-  --accent-foreground: #0f1c15;
-  --muted: #192e22;
-  --muted-foreground: #9ab5a3;
-  --border: #244030;
-}
-
-/* 4. Alpine Sky & Slate */
-[data-theme="light"][data-palette="alpine"] {
-  --background: #f3f8fd;
-  --foreground: #142433;
-  --accent: #0969c7;
-  --accent-foreground: #ffffff;
-  --muted: #e1ecf7;
-  --muted-foreground: #4a6278;
-  --border: #c9dced;
-}
-
-[data-theme="dark"][data-palette="alpine"] {
-  --background: #141c24;
-  --foreground: #edf3f8;
-  --accent: #58b4ff;
-  --accent-foreground: #141c24;
-  --muted: #1f2b37;
-  --muted-foreground: #9fb2c4;
-  --border: #2e3f50;
 }

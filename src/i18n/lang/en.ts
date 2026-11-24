@@ -94,6 +94,14 @@ export default {
     label: "Switch language",
     switchTo: "Switch to Vietnamese",
   },
+  modes: {
+    label: "View mode",
+    watch: "watch",
+    index: "index",
+    indexHeading: "Article index (## )",
+    homeIndexHeading: "All posts index",
+    scrollCue: "scroll ↓",
+  },
   a11y: {
     skipToContent: "Skip to content",
     skipTableOfContents: "Skip table of contents",

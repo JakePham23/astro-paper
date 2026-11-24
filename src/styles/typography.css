@@ -25,7 +25,7 @@
     }
 
     h3 {
-      @apply text-lg sm:text-xl italic;
+      @apply text-lg italic sm:text-xl;
     }
 
     p,
@@ -113,7 +113,7 @@
     }
 
     blockquote {
-      @apply border-s-accent/80 wrap-break-word opacity-80;
+      @apply border-s-accent/80 wrap-break-word;
     }
 
     details:not(.callout) {

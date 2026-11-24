@@ -196,10 +196,8 @@ const isActive = (path: string) => {
                 aria-label={t.nav.search}
               >
                 <IconSearch class="size-6 sm:size-4" />
-                <span class="hidden font-medium lg:inline">
-                  {t.nav.search}
-                </span>
-                <kbd class="border-border bg-background hidden rounded border px-1 py-0.2 font-mono text-[10px] sm:inline-block">
+                <span class="hidden font-medium lg:inline">{t.nav.search}</span>
+                <kbd class="border-border bg-background py-0.2 hidden rounded border px-1 font-mono text-[10px] sm:inline-block">
                   ⌘K
                 </kbd>
               </button>
@@ -222,7 +220,9 @@ const isActive = (path: string) => {
             </li>
           )
         }
-        <li class="col-span-2 mt-1 hidden items-center justify-center sm:mt-0 sm:flex">
+        <li
+          class="col-span-2 mt-1 hidden items-center justify-center sm:mt-0 sm:flex"
+        >
           <div
             role="group"
             aria-label={t.langSwitch.label}
@@ -269,7 +269,6 @@ const isActive = (path: string) => {
               aria-label="Coastal Cream & Navy palette"
               aria-pressed="false"
               class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-              style="background: linear-gradient(135deg, #fbf7ee 50%, #0e6380 50%);"
             ></button>
             <button
               type="button"
@@ -278,7 +277,6 @@ const isActive = (path: string) => {
               aria-label="Citrus Gallery palette"
               aria-pressed="false"
               class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-              style="background: linear-gradient(135deg, #fcf8ee 50%, #a84b08 50%);"
             ></button>
             <button
               type="button"
@@ -287,7 +285,6 @@ const isActive = (path: string) => {
               aria-label="Forest Sage palette"
               aria-pressed="false"
               class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-              style="background: linear-gradient(135deg, #f7faf4 50%, #14532d 50%);"
             ></button>
             <button
               type="button"
@@ -296,7 +293,14 @@ const isActive = (path: string) => {
               aria-label="Alpine Sky & Slate palette"
               aria-pressed="false"
               class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-              style="background: linear-gradient(135deg, #f3f8fd 50%, #0969c7 50%);"
+            ></button>
+            <button
+              type="button"
+              data-palette-btn="human"
+              title="Human MD (Warm Editorial)"
+              aria-label="Human MD Warm Editorial palette"
+              aria-pressed="false"
+              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
             ></button>
           </div>
         </li>

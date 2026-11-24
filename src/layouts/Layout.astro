@@ -129,16 +129,25 @@ const enHref = new URL(enPath, Astro.site ?? Astro.url).href;
     -->
     <script is:inline>
       (function () {
+        const validPalettes = new Set([
+          "coastal",
+          "citrus",
+          "forest",
+          "alpine",
+          "human",
+        ]);
         const stored = localStorage.getItem("theme");
         const prefersDark = window.matchMedia(
           "(prefers-color-scheme: dark)"
         ).matches;
         const theme = stored ?? (prefersDark ? "dark" : "light");
-        const palette = localStorage.getItem("palette") ?? "coastal";
+        const rawPalette = localStorage.getItem("palette") ?? "coastal";
+        const palette = validPalettes.has(rawPalette) ? rawPalette : "coastal";
         const root = document.firstElementChild;
         root?.setAttribute("data-theme", theme);
         root?.setAttribute("data-palette", palette);
         root?.classList.toggle("dark", theme === "dark");
+        root?.classList.add("js");
         // Expose value so theme.ts can skip re-detection.
         window.__theme = { value: theme, palette };
       })();
@@ -151,10 +160,12 @@ const enHref = new URL(enPath, Astro.site ?? Astro.url).href;
   <body
     class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
   >
+    <div class="scroll-progress" data-scroll-progress aria-hidden="true"></div>
     <slot />
     {config.features.search !== false && <SearchModal />}
     <script>
       import "@/scripts/theme";
+      import "@/scripts/reveal";
       import "@/scripts/mermaid";
     </script>
     <CustomBodyEnd />

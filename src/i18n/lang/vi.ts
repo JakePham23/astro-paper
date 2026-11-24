@@ -94,6 +94,14 @@ export default {
     label: "Chuyển ngôn ngữ",
     switchTo: "Switch to English",
   },
+  modes: {
+    label: "Chế độ hiển thị",
+    watch: "watch",
+    index: "index",
+    indexHeading: "Mục lục bài viết (## )",
+    homeIndexHeading: "Chỉ mục tất cả bài viết",
+    scrollCue: "scroll ↓",
+  },
   a11y: {
     skipToContent: "Bỏ qua đến nội dung",
     skipTableOfContents: "Bỏ qua mục lục",
