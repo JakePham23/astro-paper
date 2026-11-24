@@ -1,7 +1,9 @@
 /**
  * Rehype plugin that surfaces Markdown syntax prefixes (`## `, `### `, `> `) as
- * decorative `span.md-prefix[aria-hidden="true"]` elements and tags content
- * blocks with `data-reveal="block"` for scroll-driven/IO reveal animations.
+ * decorative `span.md-prefix[aria-hidden="true"]` elements, assigns rotating
+ * `data-sec="1..8"` section indices on `h2` and their descendant section blocks
+ * (`h3`, `.table-wrapper`, `blockquote`, `ul`, `ol`), and tags content blocks
+ * with `data-reveal="block"` for scroll-driven/IO reveal animations.
  *
  * Must run AFTER `rehypeHeadingIds`, `rehypeInlineToc`, `rehypeCallouts`, and
  * `rehypeTableWrapper` so TOC heading extraction and callouts remain clean.
@@ -44,6 +46,10 @@ function makePrefixSpan(text, extraClass) {
 }
 
 export const rehypeMarkdownPrefixes = () => tree => {
+  let currentSec = 0;
+
+  const activeSec = () => String(currentSec > 0 ? currentSec : 1);
+
   const walk = (node, insideProtected) => {
     if (!node?.children) return;
 
@@ -60,16 +66,31 @@ export const rehypeMarkdownPrefixes = () => tree => {
         continue;
       }
 
-      if (child.tagName === "h2" || child.tagName === "h3") {
-        const prefix = child.tagName === "h2" ? "## " : "### ";
+      if (child.tagName === "h2") {
+        currentSec = (currentSec % 8) + 1;
         child.properties ??= {};
+        child.properties.dataSec = String(currentSec);
         child.properties.dataReveal = "block";
         child.children ??= [];
         const alreadyHasPrefix =
           child.children[0]?.type === "element" &&
           hasClass(child.children[0], "md-prefix");
         if (!alreadyHasPrefix) {
-          child.children.unshift(makePrefixSpan(prefix));
+          child.children.unshift(makePrefixSpan("## "));
+        }
+        continue;
+      }
+
+      if (child.tagName === "h3") {
+        child.properties ??= {};
+        child.properties.dataSec = activeSec();
+        child.properties.dataReveal = "block";
+        child.children ??= [];
+        const alreadyHasPrefix =
+          child.children[0]?.type === "element" &&
+          hasClass(child.children[0], "md-prefix");
+        if (!alreadyHasPrefix) {
+          child.children.unshift(makePrefixSpan("### "));
         }
         continue;
       }
@@ -77,6 +98,7 @@ export const rehypeMarkdownPrefixes = () => tree => {
       if (child.tagName === "blockquote") {
         addClass(child, "md-blockquote");
         child.properties ??= {};
+        child.properties.dataSec = activeSec();
         child.properties.dataReveal = "block";
         child.children ??= [];
         const alreadyHasPrefix =
@@ -89,7 +111,21 @@ export const rehypeMarkdownPrefixes = () => tree => {
         continue;
       }
 
-      if (hasClass(child, "table-wrapper") || child.tagName === "pre") {
+      if (hasClass(child, "table-wrapper")) {
+        child.properties ??= {};
+        child.properties.dataSec = activeSec();
+        child.properties.dataReveal = "block";
+        continue;
+      }
+
+      if (child.tagName === "ul" || child.tagName === "ol") {
+        child.properties ??= {};
+        child.properties.dataSec = activeSec();
+        walk(child, false);
+        continue;
+      }
+
+      if (child.tagName === "pre") {
         child.properties ??= {};
         child.properties.dataReveal = "block";
         continue;

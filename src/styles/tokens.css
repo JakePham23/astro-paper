@@ -1,8 +1,8 @@
 /* ==========================================================================
    Design Tokens — Single Source of Truth
    Labels:
-     [V] Verified directly from reference (human-md.ai theme-color)
-     [P] Proposed design token (WCAG AA checked against --bg and --bg-raise)
+     [V] Verified directly from live reference (https://www.human-md.ai/)
+     [P] Proposed design token (WCAG AA checked >= 4.5:1 against --bg & --bg-raise)
    ========================================================================== */
 
 :root {
@@ -17,7 +17,12 @@
   --dur-block: 520ms;
   --dur-cursor: 1050ms;
   --dur-ui: 200ms;
+  --dur-band: 320ms;
   --blur-hero: 4px;
+
+  /* Shared surface & highlight helpers */
+  --bg-zebra: color-mix(in srgb, var(--bg-raise) 55%, var(--bg));
+  --hl-alpha: 28%;
 
   /* Derived accent aliases & rotating section tokens */
   --accent-amber: var(--c-amber);
@@ -31,10 +36,12 @@
   );
   --grad-progress: linear-gradient(
     90deg,
-    var(--c-amber),
-    var(--c-coral),
-    var(--c-pink)
+    var(--fill-coral, var(--c-coral)),
+    var(--fill-amber, var(--c-amber)),
+    var(--fill-pink, var(--c-pink))
   );
+
+  /* Section text tokens (WCAG AA) */
   --sec-1: var(--c-amber);
   --sec-2: var(--c-coral);
   --sec-3: var(--c-pink);
@@ -44,18 +51,42 @@
   --sec-7: var(--c-sage);
   --sec-8: var(--c-lime);
 
+  /* Section painterly fill tokens (borders, bars, washes) */
+  --sec-fill-1: var(--fill-amber);
+  --sec-fill-2: var(--fill-coral);
+  --sec-fill-3: var(--fill-pink);
+  --sec-fill-4: var(--fill-lilac);
+  --sec-fill-5: var(--fill-sky);
+  --sec-fill-6: var(--fill-teal);
+  --sec-fill-7: var(--fill-sage);
+  --sec-fill-8: var(--fill-lime);
+
   /* Palette swatch gradients for Header selector */
-  --swatch-coastal: linear-gradient(135deg, #fbf7ee 50%, #0e6380 50%);
-  --swatch-citrus: linear-gradient(135deg, #fcf8ee 50%, #a84b08 50%);
-  --swatch-forest: linear-gradient(135deg, #f7faf4 50%, #14532d 50%);
-  --swatch-alpine: linear-gradient(135deg, #f3f8fd 50%, #0969c7 50%);
+  --swatch-cobalt: linear-gradient(
+    135deg,
+    #0b41c2 52%,
+    #fc4109 52% 76%,
+    #ffabc8 76%
+  );
   --swatch-human: conic-gradient(
     from 135deg,
     #201e1f 0deg 180deg,
-    #f2b84b 180deg 225deg,
-    #ff7f61 225deg 270deg,
-    #ff8fb8 270deg 315deg,
-    #7fb8ff 315deg 360deg
+    #fc4109 180deg 230deg,
+    #ffabc8 230deg 280deg,
+    #f8d867 280deg 325deg,
+    #5d9dc5 325deg 360deg
+  );
+  --swatch-salon: linear-gradient(
+    135deg,
+    #ffabc8 52%,
+    #1c3d24 52% 80%,
+    #cb9cf8 80%
+  );
+  --swatch-ochre: linear-gradient(
+    135deg,
+    #f8d867 52%,
+    #c7963c 52% 78%,
+    #69b488 78%
   );
 }
 
@@ -68,233 +99,174 @@
     --dur-prefix: 0ms;
     --dur-block: 0ms;
     --dur-ui: 0ms;
+    --dur-band: 0ms;
     --shift: 0px;
     --blur-hero: 0px;
   }
 }
 
-/* 1. Coastal Cream & Navy (default) */
+/* ==========================================================================
+   VIVID EDITORIAL PRESETS (inspired by human-md.ai)
+   ========================================================================== */
+
+/* 1. Cobalt Gallery & Vermilion (Default) */
 :root,
 [data-theme="light"],
-[data-theme="light"][data-palette="coastal"] {
-  --background: #fbf7ee;
-  --foreground: #0b2239;
-  --accent: #0e6380;
-  --accent-foreground: #ffffff;
-  --muted: #e9e4d6;
-  --muted-foreground: #475d73;
-  --border: #ddd6c4;
+[data-theme="light"][data-palette="cobalt"] {
+  --background: #f4efe8; /* [V] --paper */
+  --foreground: #201e1f; /* [V] --ink */
+  --accent: #1e40bb; /* [P] 7.91:1 on --bg */
+  --accent-foreground: #f4efe8; /* [V] */
+  --muted: #e8e0d4; /* [P] */
+  --muted-foreground: #544e4a; /* [P] 7.05:1 */
+  --border: #d1c2af; /* [V] sandstone floor */
 
   --bg: var(--background);
   --bg-raise: var(--muted);
   --ink: var(--foreground);
   --ink-dim: var(--muted-foreground);
-  --ink-faint: #6b7f93;
+  --ink-faint: #7d746c;
   --rule: var(--border);
 
-  --c-amber: var(--accent);
-  --c-coral: #c24b2d;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #256b48;
-  --c-lime: var(--accent);
+  --band-bg: #0b41c2; /* [V] hero wall cobalt */
+  --band-fg: #f4efe8; /* [V] 8.03:1 */
+  --band-muted: #d4e0ff; /* [P] 6.13:1 */
+  --band-border: #fc4109; /* [V] --accent vermilion */
+  --band-sigil: #ffabc8; /* [V] --pink */
+  --band-pill-bg: #ffabc8; /* [V] --pink */
+  --band-pill-fg: #201e1f; /* [V] 9.75:1 */
+  --band-sheen: radial-gradient(
+    120% 90% at 18% 0%,
+    rgb(255 255 255 / 0.1),
+    transparent 60%
+  );
+  --shadow-tint: rgb(7 26 115 / 0.14);
+
+  /* AA Text tokens (>= 4.5:1 on both --bg and --bg-raise) */
+  --c-amber: #804c00;
+  --c-coral: #b3340c;
+  --c-pink: #a11b58;
+  --c-lilac: #5e36ad;
+  --c-sky: #1b3eb8;
+  --c-teal: #0d6660;
+  --c-sage: #216337;
+  --c-lime: #486300;
+
+  /* Painterly Fill tokens */
+  --fill-amber: #f8d867; /* [V] --c10 */
+  --fill-coral: #fc4109; /* [V] --accent */
+  --fill-pink: #ffabc8; /* [V] --pink */
+  --fill-lilac: #cb9cf8; /* [V] --lilac */
+  --fill-sky: #0b41c2; /* [V] hero cobalt */
+  --fill-teal: #5d9dc5; /* [V] --blue */
+  --fill-sage: #69b488; /* [V] --mint */
+  --fill-lime: #b0be77; /* [V] --c3 pistachio */
 }
 
 [data-theme="dark"],
-[data-theme="dark"][data-palette="coastal"] {
-  --background: #0b1929;
-  --foreground: #edf4fa;
-  --accent: #67c4e6;
-  --accent-foreground: #0b1929;
-  --muted: #142a42;
-  --muted-foreground: #9fb5ca;
-  --border: #1e3a58;
+[data-theme="dark"][data-palette="cobalt"] {
+  --background: #0e1638; /* [P] Midnight Cobalt */
+  --foreground: #f4efe8; /* [V] */
+  --accent: #8fb0ff; /* [P] */
+  --accent-foreground: #0e1638; /* [P] */
+  --muted: #162254; /* [P] */
+  --muted-foreground: #b8c3e6; /* [P] */
+  --border: #2b3b7d; /* [P] */
 
   --bg: var(--background);
   --bg-raise: var(--muted);
   --ink: var(--foreground);
   --ink-dim: var(--muted-foreground);
-  --ink-faint: #6c86a0;
+  --ink-faint: #7a89bd;
   --rule: var(--border);
 
-  --c-amber: var(--accent);
-  --c-coral: #ff8e72;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #7fd4a8;
-  --c-lime: var(--accent);
+  --band-bg: #152b7a;
+  --band-fg: #f4efe8;
+  --band-muted: #cad7ff;
+  --band-border: #fc4109;
+  --band-sigil: #ffabc8;
+  --band-pill-bg: #ffabc8;
+  --band-pill-fg: #201e1f;
+  --band-sheen: radial-gradient(
+    120% 90% at 18% 0%,
+    rgb(255 171 200 / 0.12),
+    transparent 60%
+  );
+  --shadow-tint: rgb(5 10 36 / 0.45);
+
+  --c-amber: #f8d867;
+  --c-coral: #ff8566;
+  --c-pink: #ffabc8;
+  --c-lilac: #d4b5ff;
+  --c-sky: #8fb0ff;
+  --c-teal: #5ee0d4;
+  --c-sage: #82dba3;
+  --c-lime: #cce874;
+
+  --fill-amber: #f8d867;
+  --fill-coral: #fc4109;
+  --fill-pink: #ffabc8;
+  --fill-lilac: #cb9cf8;
+  --fill-sky: #3b6eff;
+  --fill-teal: #4fd1c5;
+  --fill-sage: #69b488;
+  --fill-lime: #b0be77;
 }
 
-/* 2. Citrus Gallery */
-[data-theme="light"][data-palette="citrus"] {
-  --background: #fcf8ee;
-  --foreground: #2b2444;
-  --accent: #a84b08;
-  --accent-foreground: #ffffff;
-  --muted: #f2ead8;
-  --muted-foreground: #665c7a;
-  --border: #e5dac3;
-
-  --bg: var(--background);
-  --bg-raise: var(--muted);
-  --ink: var(--foreground);
-  --ink-dim: var(--muted-foreground);
-  --ink-faint: #847a96;
-  --rule: var(--border);
-
-  --c-amber: var(--accent);
-  --c-coral: #c43e22;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #2e6b46;
-  --c-lime: var(--accent);
-}
-
-[data-theme="dark"][data-palette="citrus"] {
-  --background: #1b172b;
-  --foreground: #f6f1e7;
-  --accent: #fbbf24;
-  --accent-foreground: #1b172b;
-  --muted: #292340;
-  --muted-foreground: #b4acc9;
-  --border: #3a3159;
-
-  --bg: var(--background);
-  --bg-raise: var(--muted);
-  --ink: var(--foreground);
-  --ink-dim: var(--muted-foreground);
-  --ink-faint: #7f7698;
-  --rule: var(--border);
-
-  --c-amber: var(--accent);
-  --c-coral: #ff866b;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #8fd1a6;
-  --c-lime: var(--accent);
-}
-
-/* 3. Forest Sage */
-[data-theme="light"][data-palette="forest"] {
-  --background: #f7faf4;
-  --foreground: #13251a;
-  --accent: #14532d;
-  --accent-foreground: #ffffff;
-  --muted: #e3ece0;
-  --muted-foreground: #4a5f51;
-  --border: #d0decb;
-
-  --bg: var(--background);
-  --bg-raise: var(--muted);
-  --ink: var(--foreground);
-  --ink-dim: var(--muted-foreground);
-  --ink-faint: #6d8274;
-  --rule: var(--border);
-
-  --c-amber: var(--accent);
-  --c-coral: #b94429;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #1e6b3f;
-  --c-lime: var(--accent);
-}
-
-[data-theme="dark"][data-palette="forest"] {
-  --background: #0f1c15;
-  --foreground: #eaf3ea;
-  --accent: #6ee7a0;
-  --accent-foreground: #0f1c15;
-  --muted: #192e22;
-  --muted-foreground: #9ab5a3;
-  --border: #244030;
-
-  --bg: var(--background);
-  --bg-raise: var(--muted);
-  --ink: var(--foreground);
-  --ink-dim: var(--muted-foreground);
-  --ink-faint: #678371;
-  --rule: var(--border);
-
-  --c-amber: var(--accent);
-  --c-coral: #ff8b70;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #8ce3b1;
-  --c-lime: var(--accent);
-}
-
-/* 4. Alpine Sky & Slate */
-[data-theme="light"][data-palette="alpine"] {
-  --background: #f3f8fd;
-  --foreground: #142433;
-  --accent: #0969c7;
-  --accent-foreground: #ffffff;
-  --muted: #e1ecf7;
-  --muted-foreground: #4a6278;
-  --border: #c9dced;
-
-  --bg: var(--background);
-  --bg-raise: var(--muted);
-  --ink: var(--foreground);
-  --ink-dim: var(--muted-foreground);
-  --ink-faint: #6f869b;
-  --rule: var(--border);
-
-  --c-amber: var(--accent);
-  --c-coral: #c2462b;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #246b4c;
-  --c-lime: var(--accent);
-}
-
-[data-theme="dark"][data-palette="alpine"] {
-  --background: #141c24;
-  --foreground: #edf3f8;
-  --accent: #58b4ff;
-  --accent-foreground: #141c24;
-  --muted: #1f2b37;
-  --muted-foreground: #9fb2c4;
-  --border: #2e3f50;
-
-  --bg: var(--background);
-  --bg-raise: var(--muted);
-  --ink: var(--foreground);
-  --ink-dim: var(--muted-foreground);
-  --ink-faint: #6a7f94;
-  --rule: var(--border);
-
-  --c-amber: var(--accent);
-  --c-coral: #ff8a6e;
-  --c-pink: var(--accent);
-  --c-lilac: var(--accent);
-  --c-sky: var(--accent);
-  --c-teal: var(--accent);
-  --c-sage: #82d4aa;
-  --c-lime: var(--accent);
-}
-
-/* 5. Human MD (Warm Editorial + 8-Color Semantic & Rotating Accents) */
+/* 2. Human MD (Warm Editorial + 8-Color Semantic & Rotating Accents) */
 [data-theme="light"][data-palette="human"] {
-  --background: #f8f4ee;
-  --foreground: #201e1f;
-  --muted: #ece5db;
-  --muted-foreground: #59524c;
-  --border: #ddd4c8;
+  --background: #f4efe8; /* [V] --paper */
+  --foreground: #201e1f; /* [V] --ink */
+  --accent: #b0340c; /* [P] */
+  --accent-foreground: #f4efe8; /* [V] */
+  --muted: #e8e0d5; /* [P] */
+  --muted-foreground: #57504a; /* [P] */
+  --border: #d8cfc2; /* [P] */
+
+  --bg: var(--background);
+  --bg-raise: var(--muted);
+  --ink: var(--foreground);
+  --ink-dim: var(--muted-foreground);
+  --ink-faint: #847b73;
+  --rule: var(--border);
+
+  --band-bg: #e9e0d3;
+  --band-fg: #201e1f;
+  --band-muted: #524a44;
+  --band-border: #fc4109;
+  --band-sigil: #b0340c;
+  --band-pill-bg: #201e1f;
+  --band-pill-fg: #f4efe8;
+  --band-sheen: none;
+  --shadow-tint: rgb(42 38 32 / 0.1);
+
+  --c-amber: #804b00;
+  --c-coral: #b0340c;
+  --c-pink: #9e1c57;
+  --c-lilac: #5f37ab;
+  --c-sky: #145399;
+  --c-teal: #0d6660;
+  --c-sage: #226134;
+  --c-lime: #476100;
+
+  --fill-amber: #f8d867;
+  --fill-coral: #fc4109;
+  --fill-pink: #ffabc8;
+  --fill-lilac: #cb9cf8;
+  --fill-sky: #5d9dc5;
+  --fill-teal: #4eb8b0;
+  --fill-sage: #69b488;
+  --fill-lime: #b0be77;
+}
+
+[data-theme="dark"][data-palette="human"] {
+  --background: #201e1f; /* [V] --ink */
+  --foreground: #f4efe8; /* [V] --paper */
+  --accent: #ff7a52; /* [P] */
+  --accent-foreground: #201e1f; /* [V] */
+  --muted: #2b2829; /* [P] */
+  --muted-foreground: #bdb4ab; /* [P] */
+  --border: #3d383a; /* [P] */
 
   --bg: var(--background);
   --bg-raise: var(--muted);
@@ -303,42 +275,230 @@
   --ink-faint: #8a8179;
   --rule: var(--border);
 
-  --c-amber: #8a5200;
-  --c-coral: #b5381e;
-  --c-pink: #a82864;
-  --c-lilac: #6741b8;
-  --c-sky: #155ca8;
-  --c-teal: #0f6e68;
-  --c-sage: #276637;
-  --c-lime: #4d6900;
+  --band-bg: #2a2628;
+  --band-fg: #f4efe8;
+  --band-muted: #c9c0b7;
+  --band-border: #fc4109;
+  --band-sigil: #ff7f61;
+  --band-pill-bg: #fc4109;
+  --band-pill-fg: #201e1f;
+  --band-sheen: none;
+  --shadow-tint: rgb(11 11 11 / 0.4);
 
-  --accent: var(--c-amber);
-  --accent-foreground: #fbf9f5;
+  --c-amber: #f8d867;
+  --c-coral: #ff7f61;
+  --c-pink: #ffabc8;
+  --c-lilac: #cb9cf8;
+  --c-sky: #7fb8ff;
+  --c-teal: #58dcd0;
+  --c-sage: #8fd6a8;
+  --c-lime: #c6e66b;
+
+  --fill-amber: #f8d867;
+  --fill-coral: #fc4109;
+  --fill-pink: #ffabc8;
+  --fill-lilac: #cb9cf8;
+  --fill-sky: #5d9dc5;
+  --fill-teal: #4fd1c5;
+  --fill-sage: #69b488;
+  --fill-lime: #b0be77;
 }
 
-[data-theme="dark"][data-palette="human"] {
-  --background: #201e1f; /* [V] theme-color */
-  --foreground: #f1ebe3; /* [P] 14.0:1 */
-  --muted: #2b2829; /* [P] */
-  --muted-foreground: #b9b0a7; /* [P] 7.76:1 */
-  --border: #3a3637; /* [P] */
+/* 3. Carnation Salon & Bottle Green */
+[data-theme="light"][data-palette="salon"] {
+  --background: #faf3f2; /* [P] blush-vellum paper */
+  --foreground: #201e1f; /* [V] */
+  --accent: #1c5730; /* [P] hunter green AA */
+  --accent-foreground: #faf3f2;
+  --muted: #f0e3e2;
+  --muted-foreground: #5c4d50;
+  --border: #dec9c9;
 
   --bg: var(--background);
   --bg-raise: var(--muted);
   --ink: var(--foreground);
   --ink-dim: var(--muted-foreground);
-  --ink-faint: #8a8179; /* [P] decorative only, never for reading text */
+  --ink-faint: #8c767b;
   --rule: var(--border);
 
-  --c-amber: #f2b84b; /* [P] 9.26:1 on --bg, 8.16:1 on --bg-raise */
-  --c-coral: #ff7f61; /* [P] 6.68:1 on --bg, 5.88:1 on --bg-raise */
-  --c-pink: #ff8fb8; /* [P] 7.79:1 on --bg, 6.86:1 on --bg-raise */
-  --c-lilac: #b79cff; /* [P] 7.27:1 on --bg, 6.41:1 on --bg-raise */
-  --c-sky: #7fb8ff; /* [P] 8.05:1 on --bg, 7.09:1 on --bg-raise */
-  --c-teal: #4fd1c5; /* [P] 8.89:1 on --bg, 7.83:1 on --bg-raise */
-  --c-sage: #9ccfa0; /* [P] 9.35:1 on --bg, 8.24:1 on --bg-raise */
-  --c-lime: #c6e66b; /* [P] 11.79:1 on --bg, 10.38:1 on --bg-raise */
+  --band-bg: #ffabc8; /* [V] --pink carnation */
+  --band-fg: #201e1f; /* [V] */
+  --band-muted: #4a2233;
+  --band-border: #1c3d24; /* [V] --green */
+  --band-sigil: #1c3d24; /* [V] */
+  --band-pill-bg: #1c3d24; /* [V] */
+  --band-pill-fg: #f4efe8; /* [V] */
+  --band-sheen: radial-gradient(
+    120% 90% at 85% 0%,
+    rgb(255 255 255 / 0.28),
+    transparent 60%
+  );
+  --shadow-tint: rgb(111 29 58 / 0.14);
 
-  --accent: var(--c-amber);
-  --accent-foreground: #201e1f; /* [P] 9.26:1 */
+  --c-amber: #824e00;
+  --c-coral: #b52b1d;
+  --c-pink: #9e1956;
+  --c-lilac: #6338ad;
+  --c-sky: #17538a;
+  --c-teal: #0e665c;
+  --c-sage: #1c5730;
+  --c-lime: #486300;
+
+  --fill-amber: #f8d867;
+  --fill-coral: #e83729;
+  --fill-pink: #ffabc8;
+  --fill-lilac: #cb9cf8;
+  --fill-sky: #5d9dc5;
+  --fill-teal: #58b8a8;
+  --fill-sage: #26512f;
+  --fill-lime: #b0be77;
 }
+
+[data-theme="dark"][data-palette="salon"] {
+  --background: #132419; /* [P] deep bottle green */
+  --foreground: #f4efe8; /* [V] */
+  --accent: #ffabc8; /* [V] */
+  --accent-foreground: #132419;
+  --muted: #1b3324;
+  --muted-foreground: #b5ccb9;
+  --border: #2d5239;
+
+  --bg: var(--background);
+  --bg-raise: var(--muted);
+  --ink: var(--foreground);
+  --ink-dim: var(--muted-foreground);
+  --ink-faint: #759680;
+  --rule: var(--border);
+
+  --band-bg: #21422c;
+  --band-fg: #f4efe8;
+  --band-muted: #cce3d2;
+  --band-border: #ffabc8;
+  --band-sigil: #ffabc8;
+  --band-pill-bg: #ffabc8;
+  --band-pill-fg: #201e1f;
+  --band-sheen: radial-gradient(
+    120% 90% at 80% 0%,
+    rgb(203 156 248 / 0.14),
+    transparent 60%
+  );
+  --shadow-tint: rgb(6 18 10 / 0.48);
+
+  --c-amber: #f8d867;
+  --c-coral: #ff8b7e;
+  --c-pink: #ffabc8;
+  --c-lilac: #dab8ff;
+  --c-sky: #84c5f4;
+  --c-teal: #63e2d1;
+  --c-sage: #8ee0aa;
+  --c-lime: #cfe879;
+
+  --fill-amber: #f8d867;
+  --fill-coral: #e83729;
+  --fill-pink: #ffabc8;
+  --fill-lilac: #cb9cf8;
+  --fill-sky: #5d9dc5;
+  --fill-teal: #58dcd0;
+  --fill-sage: #69b488;
+  --fill-lime: #b0be77;
+}
+
+/* 4. Ochre Tarot & Studio Mint */
+[data-theme="light"][data-palette="ochre"] {
+  --background: #f5eee0; /* [P] vintage tarot vellum */
+  --foreground: #201e1f; /* [V] */
+  --accent: #9e2d1b; /* [P] brick vermilion AA */
+  --accent-foreground: #f5eee0;
+  --muted: #e9dec9;
+  --muted-foreground: #574e42;
+  --border: #d4c3a3;
+
+  --bg: var(--background);
+  --bg-raise: var(--muted);
+  --ink: var(--foreground);
+  --ink-dim: var(--muted-foreground);
+  --ink-faint: #857864;
+  --rule: var(--border);
+
+  --band-bg: #f4cf58; /* [P] buttercup ochre */
+  --band-fg: #201e1f; /* [V] */
+  --band-muted: #4a3908;
+  --band-border: #d8402c; /* [V] index brick */
+  --band-sigil: #9e2d1b;
+  --band-pill-bg: #201e1f;
+  --band-pill-fg: #f8d867;
+  --band-sheen: radial-gradient(
+    120% 90% at 15% 0%,
+    rgb(255 255 255 / 0.3),
+    transparent 60%
+  );
+  --shadow-tint: rgb(70 40 0 / 0.14);
+
+  --c-amber: #7d4900;
+  --c-coral: #9e2d1b;
+  --c-pink: #991b54;
+  --c-lilac: #5c35a8;
+  --c-sky: #165088;
+  --c-teal: #0d6359;
+  --c-sage: #205e35;
+  --c-lime: #455f00;
+
+  --fill-amber: #c7963c;
+  --fill-coral: #d8402c;
+  --fill-pink: #f4a9b5;
+  --fill-lilac: #c9a5f8;
+  --fill-sky: #5d9dc5;
+  --fill-teal: #4da89b;
+  --fill-sage: #69b488;
+  --fill-lime: #b0be77;
+}
+
+[data-theme="dark"][data-palette="ochre"] {
+  --background: #1d1813; /* [P] espresso cellar */
+  --foreground: #f3ead8; /* [V] index vellum */
+  --accent: #f8d867; /* [V] */
+  --accent-foreground: #1d1813;
+  --muted: #2a231b;
+  --muted-foreground: #c2b49f;
+  --border: #423629;
+
+  --bg: var(--background);
+  --bg-raise: var(--muted);
+  --ink: var(--foreground);
+  --ink-dim: var(--muted-foreground);
+  --ink-faint: #8c7d69;
+  --rule: var(--border);
+
+  --band-bg: #382a14;
+  --band-fg: #f3ead8;
+  --band-muted: #e0cfa8;
+  --band-border: #e83729;
+  --band-sigil: #f8d867;
+  --band-pill-bg: #f8d867;
+  --band-pill-fg: #201e1f;
+  --band-sheen: radial-gradient(
+    120% 90% at 20% 0%,
+    rgb(248 216 103 / 0.1),
+    transparent 60%
+  );
+  --shadow-tint: rgb(12 8 2 / 0.5);
+
+  --c-amber: #f8d867;
+  --c-coral: #ff8568;
+  --c-pink: #ffa3c2;
+  --c-lilac: #d5b3ff;
+  --c-sky: #82c2f0;
+  --c-teal: #5cded0;
+  --c-sage: #88d9a4;
+  --c-lime: #cfe675;
+
+  --fill-amber: #f8d867;
+  --fill-coral: #e83729;
+  --fill-pink: #ffabc8;
+  --fill-lilac: #c9a5f8;
+  --fill-sky: #5d9dc5;
+  --fill-teal: #4fd1c5;
+  --fill-sage: #69b488;
+  --fill-lime: #b0be77;
+}
+

@@ -2,13 +2,12 @@ const THEME_KEY = "theme";
 const PALETTE_KEY = "palette";
 const LIGHT = "light";
 const DARK = "dark";
-const DEFAULT_PALETTE = "coastal";
+const DEFAULT_PALETTE = "cobalt";
 const VALID_PALETTES = new Set([
-  "coastal",
-  "citrus",
-  "forest",
-  "alpine",
+  "cobalt",
   "human",
+  "salon",
+  "ochre",
 ]);
 
 function normalizePalette(value: string | null | undefined): string {

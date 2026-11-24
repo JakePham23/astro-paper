@@ -4,20 +4,17 @@
    ========================================================================== */
 
 /* Palette swatches (moved from inline styles in Header.astro) */
-[data-palette-btn="coastal"] {
-  background: var(--swatch-coastal);
-}
-[data-palette-btn="citrus"] {
-  background: var(--swatch-citrus);
-}
-[data-palette-btn="forest"] {
-  background: var(--swatch-forest);
-}
-[data-palette-btn="alpine"] {
-  background: var(--swatch-alpine);
+[data-palette-btn="cobalt"] {
+  background: var(--swatch-cobalt);
 }
 [data-palette-btn="human"] {
   background: var(--swatch-human);
+}
+[data-palette-btn="salon"] {
+  background: var(--swatch-salon);
+}
+[data-palette-btn="ochre"] {
+  background: var(--swatch-ochre);
 }
 
 /* Markdown syntax prefixes (##, ###, >) */
@@ -247,21 +244,223 @@ em.punct {
   color: var(--c-sage);
 }
 
+/* Series progress bar in PostSidebar */
+.series-progress {
+  height: 4px;
+  width: 100%;
+  margin-block-start: 0.45rem;
+  border-radius: 9999px;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.series-progress-bar {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--grad-progress);
+  transition: width var(--dur-band) var(--ease-out);
+}
+
 /* ==========================================================================
-   Human MD 8-Color Semantic & Rotating Coordination Rules
-   Scoped to html[data-palette="human"] so coastal/citrus/forest/alpine
-   preserve their calm identities.
+   Color-Block Header Bands (Cobalt, Salon, Ochre presets)
+   ========================================================================== */
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band {
+  margin-block: 0.75rem 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: 1rem;
+  background-color: var(--band-bg);
+  background-image: var(--band-sheen);
+  color: var(--band-fg);
+  border: 1px solid color-mix(in srgb, var(--band-fg) 14%, var(--band-bg));
+  border-block-end: 3.5px solid var(--band-border);
+  box-shadow: 0 12px 28px -8px var(--shadow-tint);
+  transition:
+    background-color var(--dur-band) var(--ease-out),
+    color var(--dur-band) var(--ease-out),
+    border-color var(--dur-band) var(--ease-out);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  :is(h1, p, a, span, div) {
+  color: inherit;
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  h1 {
+  color: var(--band-fg);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  h1
+  .md-prefix {
+  color: var(--band-sigil);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  > p,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .text-muted-foreground,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .scroll-cue {
+  color: var(--band-muted);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  a[aria-label="RSS Feed"]
+  svg {
+  stroke: var(--band-sigil);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .hero-cursor {
+  color: var(--band-sigil);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .post-hero {
+  margin-block: 1rem 0.25rem;
+  background: color-mix(in srgb, var(--band-fg) 8%, var(--band-bg));
+  border-inline-start-color: var(--band-sigil);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .post-hero
+  [data-reveal="line"] {
+  color: var(--band-fg);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .modes {
+  border-color: color-mix(in srgb, var(--band-fg) 22%, var(--band-bg));
+  background: color-mix(in srgb, var(--band-fg) 10%, var(--band-bg));
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .modes
+  button[data-mode] {
+  color: var(--band-muted);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .modes
+  button[data-mode]:hover {
+  color: var(--band-fg);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  .modes
+  button[data-mode][aria-pressed="true"] {
+  background: var(--band-pill-bg);
+  color: var(--band-pill-fg);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .color-band
+  a:hover {
+  color: var(--band-sigil);
+}
+
+/* ==========================================================================
+   Vivid Editorial Coordination Rules (Cobalt, Human, Salon, Ochre)
+   Calm presets (Coastal, Citrus, Forest, Alpine) preserve their quiet identity.
    ========================================================================== */
 
 /* Selection highlight */
-html[data-palette="human"] ::selection {
-  background-color: color-mix(in srgb, var(--c-amber) 45%, var(--c-pink) 55%);
-  color: var(--accent-foreground);
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  ::selection {
+  background-color: var(--fill-pink);
+  color: var(--band-pill-fg, var(--ink));
 }
 
-/* Hero gradient on large display headings; prefix stays solid amber */
+/* Human MD keeps gradient display title on warm paper */
 html[data-palette="human"] #hero h1,
-html[data-palette="human"] main > h1 {
+html[data-palette="human"] main > header > h1 {
   background: var(--grad-hero);
   -webkit-background-clip: text;
   background-clip: text;
@@ -269,222 +468,780 @@ html[data-palette="human"] main > h1 {
 }
 
 html[data-palette="human"] #hero h1 .md-prefix,
-html[data-palette="human"] main > h1 .md-prefix {
-  color: var(--c-amber);
-  -webkit-text-fill-color: var(--c-amber);
+html[data-palette="human"] main > header > h1 .md-prefix {
+  color: var(--c-coral);
+  -webkit-text-fill-color: var(--c-coral);
 }
 
 /* Hero punctuation cycling: amber -> coral -> pink -> lilac */
-html[data-palette="human"] [data-reveal="line"]:nth-child(4n + 1) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-reveal="line"]:nth-child(4n + 1) {
   --punct-color: var(--c-amber);
 }
-html[data-palette="human"] [data-reveal="line"]:nth-child(4n + 2) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-reveal="line"]:nth-child(4n + 2) {
   --punct-color: var(--c-coral);
 }
-html[data-palette="human"] [data-reveal="line"]:nth-child(4n + 3) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-reveal="line"]:nth-child(4n + 3) {
   --punct-color: var(--c-pink);
 }
-html[data-palette="human"] [data-reveal="line"]:nth-child(4n + 4) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-reveal="line"]:nth-child(4n + 4) {
   --punct-color: var(--c-lilac);
 }
 
-/* Rotating ### (h3) sections across 8 accent colors */
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 1) {
+/* Cohesive 8-hue section mapping ([data-sec="1..8"] set by rehypeMarkdownPrefixes) */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="1"] {
   --sec: var(--sec-1);
+  --sec-fill: var(--sec-fill-1);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 2) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="2"] {
   --sec: var(--sec-2);
+  --sec-fill: var(--sec-fill-2);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 3) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="3"] {
   --sec: var(--sec-3);
+  --sec-fill: var(--sec-fill-3);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 4) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="4"] {
   --sec: var(--sec-4);
+  --sec-fill: var(--sec-fill-4);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 5) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="5"] {
   --sec: var(--sec-5);
+  --sec-fill: var(--sec-fill-5);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 6) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="6"] {
   --sec: var(--sec-6);
+  --sec-fill: var(--sec-fill-6);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 7) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="7"] {
   --sec: var(--sec-7);
+  --sec-fill: var(--sec-fill-7);
 }
-html[data-palette="human"] .app-prose h3:nth-of-type(8n + 8) {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-sec="8"] {
   --sec: var(--sec-8);
+  --sec-fill: var(--sec-fill-8);
 }
 
-html[data-palette="human"] .app-prose h3 {
-  border-inline-start: 2px solid var(--sec, var(--c-amber));
+/* Section h2 & h3 accents */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  h2[data-sec] {
+  border-block-end: 2.5px solid
+    color-mix(in srgb, var(--sec-fill, var(--fill-amber)) 68%, var(--rule));
+  padding-block-end: 0.35rem;
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  h3[data-sec] {
+  border-inline-start: 3px solid var(--sec-fill, var(--fill-amber));
   padding-inline-start: 0.65rem;
 }
 
-html[data-palette="human"] .app-prose h3 .md-prefix.is-visible,
-html[data-palette="human"]:not(.js) .app-prose h3 .md-prefix {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  :is(h2, h3)[data-sec]
+  .md-prefix.is-visible,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  ):not(.js)
+  .app-prose
+  :is(h2, h3)[data-sec]
+  .md-prefix {
   color: var(--sec, var(--c-amber));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-palette="human"] .app-prose h3 .md-prefix {
+  :root:is(
+      [data-palette="cobalt"],
+      [data-palette="human"],
+      [data-palette="salon"],
+      [data-palette="ochre"]
+    )
+    .app-prose
+    :is(h2, h3)[data-sec]
+    .md-prefix {
     color: var(--sec, var(--c-amber));
   }
 }
 
-html[data-palette="human"] .app-prose h3 .heading-link:hover {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  :is(h2, h3)[data-sec]
+  .heading-link:hover {
   color: var(--sec, var(--c-amber));
 }
 
+/* Notepad highlighter swipe on bold prose callouts */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  :is(p, li)
+  > strong {
+  background: linear-gradient(
+    transparent 60%,
+    color-mix(in srgb, var(--fill-amber) var(--hl-alpha), transparent) 60%
+  );
+  border-radius: 0.1em 0.28em 0.18em 0.1em;
+  padding-inline: 0.12em;
+}
+
 /* Fixed functional colors */
-/* 1. Body text stays neutral --ink */
-html[data-palette="human"] .app-prose p,
-html[data-palette="human"] .app-prose li {
+/* 1. Body text stays crisp neutral --ink */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  p,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  li {
   color: var(--ink);
 }
 
-/* 2. Links -> --c-sky (with underline/dashed cue, never color alone) */
-html[data-palette="human"] .app-prose a,
-html[data-palette="human"] #hero a:not([aria-label="RSS Feed"]),
-html[data-palette="human"] .index-link:hover,
-html[data-palette="human"] [data-toc-nav] a[aria-current="true"],
-html[data-palette="human"] [data-toc-nav] a:hover {
+/* 2. Links -> --c-sky (with dashed underline cue, never color alone) */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  a,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .index-link:hover,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-toc-nav]
+  a[aria-current="true"],
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-toc-nav]
+  a:hover {
   color: var(--c-sky);
 }
 
-html[data-palette="human"] .app-prose a {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  a {
   text-decoration-line: underline;
   text-decoration-style: dashed;
   text-decoration-color: color-mix(in srgb, var(--c-sky) 55%, transparent);
 }
 
-html[data-palette="human"] .app-prose a:hover {
-  color: var(--c-amber);
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  a:hover {
+  color: var(--c-coral);
   text-decoration-style: solid;
-  text-decoration-color: var(--c-amber);
+  text-decoration-color: var(--c-coral);
 }
 
 /* 3. Inline code -> --c-teal (excluding Shiki pre blocks) */
-html[data-palette="human"] .app-prose :not(pre) > code {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  :not(pre)
+  > code {
   color: var(--c-teal);
   background: var(--bg-raise);
-  border: 1px solid color-mix(in srgb, var(--c-teal) 30%, var(--rule));
+  border: 1px solid color-mix(in srgb, var(--fill-teal) 32%, var(--rule));
 }
 
-/* 4. Blockquotes -> --c-lilac */
-html[data-palette="human"] .app-prose blockquote.md-blockquote {
-  border-inline-start-color: var(--c-lilac);
+/* 4. Blockquotes -> section hue or --c-lilac */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  blockquote.md-blockquote {
+  border-inline-start: 3px solid var(--sec-fill, var(--fill-lilac));
 }
 
-html[data-palette="human"]
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
   .app-prose
   blockquote.md-blockquote
   > .md-prefix-quote.is-visible,
-html[data-palette="human"]:not(.js)
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  ):not(.js)
   .app-prose
   blockquote.md-blockquote
   > .md-prefix-quote {
-  color: var(--c-lilac);
+  color: var(--sec, var(--c-lilac));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-palette="human"]
+  :root:is(
+      [data-palette="cobalt"],
+      [data-palette="human"],
+      [data-palette="salon"],
+      [data-palette="ochre"]
+    )
     .app-prose
     blockquote.md-blockquote
     > .md-prefix-quote {
-    color: var(--c-lilac);
+    color: var(--sec, var(--c-lilac));
   }
 }
 
-/* 5. List markers -> --c-sage */
-html[data-palette="human"] .app-prose ul > li::marker,
-html[data-palette="human"] .app-prose ol > li::marker {
+/* 5. List markers -> inherit section hue or --c-sage */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  :is(ul, ol)
+  > li::marker {
+  color: var(--sec, var(--c-sage));
+}
+
+/* 6. Scannable technical tables + semantic column tones */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  .table-wrapper {
+  border: 1.5px solid
+    color-mix(in srgb, var(--sec-fill, var(--fill-sky)) 42%, var(--rule));
+  box-shadow: 0 6px 18px -8px var(--shadow-tint);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  table
+  thead
+  th {
+  background: color-mix(
+    in srgb,
+    var(--sec-fill, var(--fill-sky)) 18%,
+    var(--bg-raise)
+  );
+  color: var(--ink);
+  border-block-end: 2px solid
+    color-mix(in srgb, var(--sec-fill, var(--fill-sky)) 55%, var(--rule));
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  table
+  thead
+  th[data-tone="pos"] {
+  background: color-mix(in srgb, var(--fill-sage) 24%, var(--bg-raise));
   color: var(--c-sage);
+  border-block-end-color: var(--fill-sage);
 }
 
-/* 6. Tags rotate pink / sage / lime */
-html[data-palette="human"]
-  li[data-reveal="block"]
-  a[href*="/tags/"]:nth-child(3n + 1),
-html[data-palette="human"]
-  ul
-  > li:has(> a[href*="/tags/"]):nth-child(3n + 1)
-  > a,
-html[data-palette="human"] .index-row:nth-child(3n + 1) .index-tag {
-  --tag-c: var(--c-pink);
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  table
+  thead
+  th[data-tone="neg"] {
+  background: color-mix(in srgb, var(--fill-coral) 20%, var(--bg-raise));
+  color: var(--c-coral);
+  border-block-end-color: var(--fill-coral);
 }
 
-html[data-palette="human"]
-  li[data-reveal="block"]
-  a[href*="/tags/"]:nth-child(3n + 2),
-html[data-palette="human"]
-  ul
-  > li:has(> a[href*="/tags/"]):nth-child(3n + 2)
-  > a,
-html[data-palette="human"] .index-row:nth-child(3n + 2) .index-tag {
-  --tag-c: var(--c-sage);
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  table
+  thead
+  th[data-tone="warn"] {
+  background: color-mix(in srgb, var(--fill-amber) 26%, var(--bg-raise));
+  color: var(--c-amber);
+  border-block-end-color: var(--fill-amber);
 }
 
-html[data-palette="human"]
-  li[data-reveal="block"]
-  a[href*="/tags/"]:nth-child(3n + 3),
-html[data-palette="human"]
-  ul
-  > li:has(> a[href*="/tags/"]):nth-child(3n + 3)
-  > a,
-html[data-palette="human"] .index-row:nth-child(3n + 3) .index-tag {
-  --tag-c: var(--c-lime);
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  table
+  tbody
+  tr:nth-child(even) {
+  background: var(--bg-zebra);
 }
 
-html[data-palette="human"] li[data-reveal="block"] a[href*="/tags/"],
-html[data-palette="human"] ul > li:has(> a[href*="/tags/"]) > a {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .app-prose
+  table
+  tbody
+  tr:hover {
+  background: color-mix(
+    in srgb,
+    var(--sec-fill, var(--fill-pink)) 12%,
+    var(--bg)
+  );
+}
+
+/* 7. Deterministic 8-hue Tags (via data-hue="1..8") */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="1"] {
+  --tag-c: var(--sec-1);
+  --tag-fill: var(--sec-fill-1);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="2"] {
+  --tag-c: var(--sec-2);
+  --tag-fill: var(--sec-fill-2);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="3"] {
+  --tag-c: var(--sec-3);
+  --tag-fill: var(--sec-fill-3);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="4"] {
+  --tag-c: var(--sec-4);
+  --tag-fill: var(--sec-fill-4);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="5"] {
+  --tag-c: var(--sec-5);
+  --tag-fill: var(--sec-fill-5);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="6"] {
+  --tag-c: var(--sec-6);
+  --tag-fill: var(--sec-fill-6);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="7"] {
+  --tag-c: var(--sec-7);
+  --tag-fill: var(--sec-fill-7);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-hue="8"] {
+  --tag-c: var(--sec-8);
+  --tag-fill: var(--sec-fill-8);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  a[data-hue],
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  span[data-hue] {
   color: var(--tag-c, var(--c-pink));
   border-color: color-mix(
     in srgb,
-    var(--tag-c, var(--c-pink)) 35%,
+    var(--tag-fill, var(--fill-pink)) 40%,
     var(--rule)
   );
   background: color-mix(
     in srgb,
-    var(--tag-c, var(--c-pink)) 10%,
+    var(--tag-fill, var(--fill-pink)) 15%,
     var(--bg-raise)
   );
 }
 
-html[data-palette="human"] .index-tag {
-  color: var(--tag-c, var(--c-sage));
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  a[data-hue]:hover {
+  border-color: var(--tag-fill, var(--fill-pink));
+  background: color-mix(
+    in srgb,
+    var(--tag-fill, var(--fill-pink)) 24%,
+    var(--bg-raise)
+  );
 }
 
-/* 7. Rare accents & numbers -> --c-lime */
-html[data-palette="human"] .index-date,
-html[data-palette="human"] .topics-toc-count {
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .index-tag[data-hue] {
+  color: var(--tag-c, var(--c-sage));
+  border-radius: 0.375rem;
+  padding: 0.1rem 0.45rem;
+}
+
+/* 8. Rare accents, numbers, Topics groups, & Sidebar active state */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .index-date,
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .topics-toc-count {
   color: var(--c-lime);
 }
 
-/* 8. Card hover border rotation on listing pages */
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 1) {
-  --sec: var(--sec-1);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 2) {
-  --sec: var(--sec-2);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 3) {
-  --sec: var(--sec-3);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 4) {
-  --sec: var(--sec-4);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 5) {
-  --sec: var(--sec-5);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 6) {
-  --sec: var(--sec-6);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 7) {
-  --sec: var(--sec-7);
-}
-html[data-palette="human"] li[data-reveal="block"]:nth-of-type(8n + 8) {
-  --sec: var(--sec-8);
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-topic-group][data-sec] {
+  border-inline-start: 3.5px solid var(--sec-fill, var(--fill-amber));
 }
 
-html[data-palette="human"] li[data-reveal="block"]:hover {
-  border-color: color-mix(in srgb, var(--sec, var(--c-amber)) 65%, var(--rule));
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  [data-topic-group][data-sec]
+  h2 {
+  color: var(--sec, var(--ink));
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  a[data-sec]:hover {
+  border-color: var(--sec-fill, var(--fill-amber));
+  color: var(--sec, var(--c-amber));
+  background: color-mix(
+    in srgb,
+    var(--sec-fill, var(--fill-amber)) 16%,
+    var(--bg-raise)
+  );
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  .sidebar-link.is-active {
+  background: color-mix(in srgb, var(--fill-pink) 18%, var(--bg-raise));
+  color: var(--c-pink);
+  border-inline-start: 2.5px solid var(--fill-coral);
+}
+
+/* 9. Card hover border rotation on listing pages */
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 1) {
+  --sec: var(--sec-1);
+  --sec-fill: var(--sec-fill-1);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 2) {
+  --sec: var(--sec-2);
+  --sec-fill: var(--sec-fill-2);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 3) {
+  --sec: var(--sec-3);
+  --sec-fill: var(--sec-fill-3);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 4) {
+  --sec: var(--sec-4);
+  --sec-fill: var(--sec-fill-4);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 5) {
+  --sec: var(--sec-5);
+  --sec-fill: var(--sec-fill-5);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 6) {
+  --sec: var(--sec-6);
+  --sec-fill: var(--sec-fill-6);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 7) {
+  --sec: var(--sec-7);
+  --sec-fill: var(--sec-fill-7);
+}
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:nth-of-type(8n + 8) {
+  --sec: var(--sec-8);
+  --sec-fill: var(--sec-fill-8);
+}
+
+:root:is(
+    [data-palette="cobalt"],
+    [data-palette="human"],
+    [data-palette="salon"],
+    [data-palette="ochre"]
+  )
+  li[data-reveal="block"]:hover {
+  border-color: color-mix(in srgb, var(--sec-fill, var(--fill-amber)) 65%, var(--rule));
+  box-shadow: 0 8px 20px -10px var(--shadow-tint);
 }

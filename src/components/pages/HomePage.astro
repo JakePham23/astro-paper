@@ -11,6 +11,7 @@ import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { getPostUrl } from "@/utils/getPostPaths";
 import { splitTrailingPunct } from "@/utils/splitTrailingPunct";
+import { getTagHue } from "@/utils/tagHue";
 import { getPostsByLocale, normalizeLocale } from "@/utils/i18nPosts";
 import { getAssetPath } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
@@ -42,7 +43,7 @@ const heroSubParts = splitTrailingPunct(t.home.heroSub);
     data-view-mode="watch"
     class="app-layout my-1"
   >
-    <section id="hero" class="border-border border-b pt-5 pb-6 sm:pt-8">
+    <section id="hero" class="color-band border-border border-b pt-5 pb-6 sm:pt-8">
       <h1
         class="my-3 inline-block text-3xl font-bold tracking-tight sm:my-6 sm:text-5xl"
       >
@@ -181,7 +182,12 @@ const heroSubParts = splitTrailingPunct(t.home.heroSub);
                 {post.data.title}
               </a>
               {post.data.tags?.[0] && (
-                <span class="index-tag">#{post.data.tags[0]}</span>
+                <span
+                  class="index-tag"
+                  data-hue={getTagHue(post.data.tags[0])}
+                >
+                  #{post.data.tags[0]}
+                </span>
               )}
             </li>
           ))

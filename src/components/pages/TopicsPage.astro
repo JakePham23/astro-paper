@@ -13,6 +13,7 @@ import {
   normalizeLocale,
 } from "@/utils/i18nPosts";
 import { getTopicMeta } from "@/i18n/topics";
+import { getTagHue } from "@/utils/tagHue";
 import { tplStr, useTranslations } from "@/i18n";
 import config from "@/config";
 
@@ -82,9 +83,10 @@ const groups = Array.from(groupsMap.entries())
 
       <div class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
         {
-          groups.map(group => (
+          groups.map((group, idx) => (
             <a
               href={`#folder-${group.folder}`}
+              data-sec={String((idx % 8) + 1)}
               class:list={[
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:py-1",
                 "border-border bg-muted/40 text-foreground",
@@ -130,10 +132,11 @@ const groups = Array.from(groupsMap.entries())
 
       <div id="topic-groups" class="space-y-6">
         {
-          groups.map(group => (
+          groups.map((group, idx) => (
             <section
               id={`folder-${group.folder}`}
               data-topic-group
+              data-sec={String((idx % 8) + 1)}
               class="border-border bg-background scroll-mt-6 rounded-xl border p-4 sm:p-5"
             >
               <div class="border-border mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b pb-2.5 sm:mb-4 sm:pb-3">
@@ -176,7 +179,10 @@ const groups = Array.from(groupsMap.entries())
                         </div>
                       </div>
                       {item.tags[0] && (
-                        <span class="bg-muted/70 text-muted-foreground mt-0.5 hidden shrink-0 self-start rounded px-1.5 py-0.5 font-mono text-[11px] sm:inline-block">
+                        <span
+                          data-hue={getTagHue(item.tags[0])}
+                          class="bg-muted/70 text-muted-foreground mt-0.5 hidden shrink-0 self-start rounded px-1.5 py-0.5 font-mono text-[11px] sm:inline-block"
+                        >
                           #{item.tags[0]}
                         </span>
                       )}

@@ -103,71 +103,73 @@ const ogImage = ogImageUrl
     class:list={["app-layout", { "mt-8": !config.features.showBackButton }]}
     data-pagefind-body
   >
-    <h1
-      style={{ viewTransitionName: toTransitionName(post.id) }}
-      class="text-accent inline-block text-2xl leading-tight font-bold tracking-tight sm:text-3xl"
-    >
-      <span class="md-prefix" aria-hidden="true"># </span>{title}
-    </h1>
+    <header class="post-header-band color-band">
+      <h1
+        style={{ viewTransitionName: toTransitionName(post.id) }}
+        class="text-accent inline-block text-2xl leading-tight font-bold tracking-tight sm:text-3xl"
+      >
+        <span class="md-prefix" aria-hidden="true"># </span>{title}
+      </h1>
 
-    {
-      tagline && (
-        <p class="text-muted-foreground mt-1.5 text-sm leading-relaxed sm:text-base">
-          {tagline}
-        </p>
-      )
-    }
-
-    <div class="my-2 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-        <span
-          aria-hidden="true"
-          class:list={[
-            "text-muted-foreground max-sm:hidden",
-            { hidden: !config.features.editPost?.enabled || hideEditPost },
-          ]}
-        >
-          |
-        </span>
-        <EditPost {hideEditPost} {post} class="max-sm:hidden" />
-      </div>
       {
-        h2Headings.length >= 2 && (
-          <nav class="modes" data-modes aria-label={t.modes.label}>
-            <button type="button" data-mode="watch" aria-pressed="true">
-              {t.modes.watch}
-            </button>
-            <button type="button" data-mode="index" aria-pressed="false">
-              {t.modes.index}
-            </button>
-          </nav>
+        tagline && (
+          <p class="text-muted-foreground mt-1.5 text-sm leading-relaxed sm:text-base">
+            {tagline}
+          </p>
         )
       }
-    </div>
 
-    {
-      leadLines.length > 0 && (
-        <section class="hero post-hero hero-lines" aria-hidden="true">
-          {leadLines.map((line, idx) => (
-            <p
-              data-reveal="line"
-              data-reveal-upright={
-                idx === leadLines.length - 1 ? "true" : undefined
-              }
-            >
-              {line.body}
-              {line.punct && <em class="punct">{line.punct}</em>}
-              {idx === leadLines.length - 1 && (
-                <span class="hero-cursor" aria-hidden="true">
-                  _
-                </span>
-              )}
-            </p>
-          ))}
-        </section>
-      )
-    }
+      <div class="my-2 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+          <span
+            aria-hidden="true"
+            class:list={[
+              "text-muted-foreground max-sm:hidden",
+              { hidden: !config.features.editPost?.enabled || hideEditPost },
+            ]}
+          >
+            |
+          </span>
+          <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+        </div>
+        {
+          h2Headings.length >= 2 && (
+            <nav class="modes" data-modes aria-label={t.modes.label}>
+              <button type="button" data-mode="watch" aria-pressed="true">
+                {t.modes.watch}
+              </button>
+              <button type="button" data-mode="index" aria-pressed="false">
+                {t.modes.index}
+              </button>
+            </nav>
+          )
+        }
+      </div>
+
+      {
+        leadLines.length > 0 && (
+          <section class="hero post-hero hero-lines" aria-hidden="true">
+            {leadLines.map((line, idx) => (
+              <p
+                data-reveal="line"
+                data-reveal-upright={
+                  idx === leadLines.length - 1 ? "true" : undefined
+                }
+              >
+                {line.body}
+                {line.punct && <em class="punct">{line.punct}</em>}
+                {idx === leadLines.length - 1 && (
+                  <span class="hero-cursor" aria-hidden="true">
+                    _
+                  </span>
+                )}
+              </p>
+            ))}
+          </section>
+        )
+      }
+    </header>
 
     <div data-watch-panel>
       <div class="post-body relative mt-5 sm:mt-8">

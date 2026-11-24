@@ -55,7 +55,7 @@ for (const rel of ["src/styles/tokens.css", "src/styles/motion.css"]) {
   }
 }
 
-// 3. Verify WCAG AA >= 4.5:1 for human dark & light reading + 8 accent colors on --bg & --bg-raise
+// 3. Verify WCAG AA >= 4.5:1 for all 4 vivid presets (cobalt, human, salon, ochre)
 function hexToRgb(hex) {
   const h = hex.replace("#", "");
   const full =
@@ -87,9 +87,9 @@ function contrastRatio(hexA, hexB) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-function extractHumanBlock(tokensCss, theme) {
+function extractPaletteBlock(tokensCss, theme, palette) {
   const re = new RegExp(
-    `\\[data-theme="${theme}"\\]\\[data-palette="human"\\]\\s*\\{([\\s\\S]*?)\\}`
+    `\\[data-theme="${theme}"\\]\\[data-palette="${palette}"\\]\\s*\\{([\\s\\S]*?)\\}`
   );
   const match = re.exec(tokensCss);
   if (!match) return {};
@@ -112,33 +112,41 @@ const ACCENT_KEYS = [
   "--c-lime",
 ];
 
+const VIVID_PALETTES = ["cobalt", "human", "salon", "ochre"];
 const tokensRaw = fs.readFileSync(TOKENS_PATH, "utf8");
-for (const theme of ["dark", "light"]) {
-  const vars = extractHumanBlock(tokensRaw, theme);
-  const bg = vars["--background"];
-  const bgRaise = vars["--muted"];
-  const pairs = [
-    ["foreground vs --bg", vars["--foreground"], bg],
-    ["foreground vs --bg-raise", vars["--foreground"], bgRaise],
-    ["muted-foreground vs --bg", vars["--muted-foreground"], bg],
-    ["accent-foreground vs --c-amber", vars["--accent-foreground"], vars["--c-amber"]],
-  ];
 
-  for (const key of ACCENT_KEYS) {
-    pairs.push([`${key} vs --bg`, vars[key], bg]);
-    pairs.push([`${key} vs --bg-raise`, vars[key], bgRaise]);
-  }
+for (const palette of VIVID_PALETTES) {
+  for (const theme of ["light", "dark"]) {
+    const vars = extractPaletteBlock(tokensRaw, theme, palette);
+    const bg = vars["--background"];
+    const bgRaise = vars["--muted"];
+    const pairs = [
+      ["foreground vs --bg", vars["--foreground"], bg],
+      ["foreground vs --bg-raise", vars["--foreground"], bgRaise],
+      ["muted-foreground vs --bg", vars["--muted-foreground"], bg],
+      ["muted-foreground vs --bg-raise", vars["--muted-foreground"], bgRaise],
+      ["accent-foreground vs --accent", vars["--accent-foreground"], vars["--accent"]],
+      ["band-fg vs --band-bg", vars["--band-fg"], vars["--band-bg"]],
+      ["band-muted vs --band-bg", vars["--band-muted"], vars["--band-bg"]],
+      ["band-pill-fg vs --band-pill-bg", vars["--band-pill-fg"], vars["--band-pill-bg"]],
+    ];
 
-  for (const [label, fg, surface] of pairs) {
-    if (!fg || !surface) {
-      fail(`human ${theme}: missing token for ${label}`);
-      continue;
+    for (const key of ACCENT_KEYS) {
+      pairs.push([`${key} vs --bg`, vars[key], bg]);
+      pairs.push([`${key} vs --bg-raise`, vars[key], bgRaise]);
     }
-    const ratio = contrastRatio(fg, surface);
-    if (ratio >= 4.5) {
-      pass(`human ${theme} ${label}: ${ratio.toFixed(2)}:1 (>= 4.5:1)`);
-    } else {
-      fail(`human ${theme} ${label}: ${ratio.toFixed(2)}:1 (< 4.5:1)`);
+
+    for (const [label, fg, surface] of pairs) {
+      if (!fg || !surface) {
+        fail(`${palette} ${theme}: missing token for ${label}`);
+        continue;
+      }
+      const ratio = contrastRatio(fg, surface);
+      if (ratio >= 4.5) {
+        pass(`${palette} ${theme} ${label}: ${ratio.toFixed(2)}:1 (>= 4.5:1)`);
+      } else {
+        fail(`${palette} ${theme} ${label}: ${ratio.toFixed(2)}:1 (< 4.5:1)`);
+      }
     }
   }
 }

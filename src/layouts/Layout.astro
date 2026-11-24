@@ -130,19 +130,18 @@ const enHref = new URL(enPath, Astro.site ?? Astro.url).href;
     <script is:inline>
       (function () {
         const validPalettes = new Set([
-          "coastal",
-          "citrus",
-          "forest",
-          "alpine",
+          "cobalt",
           "human",
+          "salon",
+          "ochre",
         ]);
         const stored = localStorage.getItem("theme");
         const prefersDark = window.matchMedia(
           "(prefers-color-scheme: dark)"
         ).matches;
         const theme = stored ?? (prefersDark ? "dark" : "light");
-        const rawPalette = localStorage.getItem("palette") ?? "coastal";
-        const palette = validPalettes.has(rawPalette) ? rawPalette : "coastal";
+        const rawPalette = localStorage.getItem("palette") ?? "cobalt";
+        const palette = validPalettes.has(rawPalette) ? rawPalette : "cobalt";
         const root = document.firstElementChild;
         root?.setAttribute("data-theme", theme);
         root?.setAttribute("data-palette", palette);

@@ -123,7 +123,7 @@ const isActive = (path: string) => {
       </div>
       <ul
         id="menu-items"
-        class="[&>li>a]:hover:text-accent mt-4 hidden w-full max-w-xs grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:max-w-none sm:items-center sm:gap-x-2.5 sm:gap-y-0 md:gap-x-3.5 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-2.5 [&>li>a]:text-center [&>li>a]:font-medium [&>li>a]:whitespace-nowrap sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
+        class="[&>li>a]:hover:text-accent mt-4 hidden w-full max-w-xs grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:items-center sm:justify-end sm:gap-x-2.5 sm:gap-y-1 md:gap-x-3.5 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-2.5 [&>li>a]:text-center [&>li>a]:font-medium [&>li>a]:whitespace-nowrap sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
       >
         <li class="col-span-2">
           <a
@@ -260,39 +260,15 @@ const isActive = (path: string) => {
           <div
             role="group"
             aria-label="Color palette"
-            class="border-border bg-muted/40 flex items-center gap-3 rounded-full border px-3.5 py-2 sm:gap-1.5 sm:px-2 sm:py-1"
+            class="border-border bg-muted/40 flex flex-wrap items-center justify-center gap-2 rounded-full border px-3 py-2 sm:flex-nowrap sm:gap-1 sm:px-2 sm:py-1"
           >
             <button
               type="button"
-              data-palette-btn="coastal"
-              title="Coastal Cream & Navy"
-              aria-label="Coastal Cream & Navy palette"
+              data-palette-btn="cobalt"
+              title="Cobalt Gallery & Vermilion"
+              aria-label="Cobalt Gallery and Vermilion palette"
               aria-pressed="false"
-              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-            ></button>
-            <button
-              type="button"
-              data-palette-btn="citrus"
-              title="Citrus Gallery"
-              aria-label="Citrus Gallery palette"
-              aria-pressed="false"
-              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-            ></button>
-            <button
-              type="button"
-              data-palette-btn="forest"
-              title="Forest Sage"
-              aria-label="Forest Sage palette"
-              aria-pressed="false"
-              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
-            ></button>
-            <button
-              type="button"
-              data-palette-btn="alpine"
-              title="Alpine Sky & Slate"
-              aria-label="Alpine Sky & Slate palette"
-              aria-pressed="false"
-              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+              class="ring-offset-background size-5 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
             ></button>
             <button
               type="button"
@@ -300,7 +276,23 @@ const isActive = (path: string) => {
               title="Human MD (Warm Editorial)"
               aria-label="Human MD Warm Editorial palette"
               aria-pressed="false"
-              class="ring-offset-background size-6 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+              class="ring-offset-background size-5 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+            ></button>
+            <button
+              type="button"
+              data-palette-btn="salon"
+              title="Carnation Salon & Bottle Green"
+              aria-label="Carnation Salon and Bottle Green palette"
+              aria-pressed="false"
+              class="ring-offset-background size-5 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
+            ></button>
+            <button
+              type="button"
+              data-palette-btn="ochre"
+              title="Ochre Tarot & Studio Mint"
+              aria-label="Ochre Tarot and Studio Mint palette"
+              aria-pressed="false"
+              class="ring-offset-background size-5 rounded-full border border-black/15 transition-transform hover:scale-110 sm:size-3.5"
             ></button>
           </div>
         </li>
